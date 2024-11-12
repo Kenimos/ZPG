@@ -1,54 +1,42 @@
 // Transformation.cpp
+
 #include "Transformation.h"
-#include <glm/gtc/matrix_transform.hpp>
+#include "Translation.h"
+#include "Rotation.h"
+#include "Scaling.h"
 
-Transformation::Transformation()
-    : position(0.0f), orientation(), scale(1.0f),
-      rotationAngleDegrees(0.0f), rotationAxis(0.0f, 1.0f, 0.0f)
-{
+Transformation::Transformation() {
 }
 
-void Transformation::setPosition(const glm::vec3& position)
-{
-    this->position = position;
+Transformation::~Transformation() {
+    clearTransformations();
 }
 
-const glm::vec3& Transformation::getPosition() const
-{
-    return position;
-}
-
-void Transformation::setRotation(float angleDegrees, const glm::vec3& axis)
-{
-    rotationAngleDegrees = angleDegrees;
-    rotationAxis = glm::normalize(axis);
-    orientation = glm::angleAxis(glm::radians(angleDegrees), rotationAxis);
-}
-
-float Transformation::getRotationAngle() const
-{
-    return rotationAngleDegrees;
-}
-
-const glm::quat& Transformation::getOrientation() const
-{
-    return orientation;
-}
-
-void Transformation::setScale(const glm::vec3& scale)
-{
-    this->scale = scale;
-}
-
-const glm::vec3& Transformation::getScale() const
-{
-    return scale;
-}
-
-glm::mat4 Transformation::getModelMatrix() const
-{
-    glm::mat4 model = glm::translate(glm::mat4(1.0f), position);
-    model *= glm::mat4_cast(orientation);
-    model = glm::scale(model, scale);
+glm::mat4 Transformation::getModelMatrix() {
+    glm::mat4 model = glm::mat4(1.0f);
+    // Apply transformations in reverse order (last added transformation is applied first)
+    for (auto it = components.rbegin(); it != components.rend(); ++it) {
+        model = (*it)->getMatrix() * model;
+    }
     return model;
+}
+
+void Transformation::addTransformation(std::unique_ptr<TransformationComponent> component) {
+    components.push_back(std::move(component));
+}
+
+void Transformation::clearTransformations() {
+    components.clear(); // Automatically deletes components due to unique_ptr
+}
+
+void Transformation::translate(const glm::vec3& translation) {
+    addTransformation(std::make_unique<Translation>(translation));
+}
+
+void Transformation::rotate(float angleDegrees, const glm::vec3& axis) {
+    addTransformation(std::make_unique<Rotation>(angleDegrees, axis));
+}
+
+void Transformation::scale(const glm::vec3& scalingFactors) {
+    addTransformation(std::make_unique<Scaling>(scalingFactors));
 }

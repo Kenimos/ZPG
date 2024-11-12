@@ -1,6 +1,6 @@
 # Compiler and flags
 CXX = g++
-CXXFLAGS = -std=c++11 -Wall -IHeaders -I/opt/homebrew/include
+CXXFLAGS = -std=c++14 -Wall -IHeaders -I/opt/homebrew/include
 
 # Linker flags (for OpenGL, GLEW, and GLFW)
 LDFLAGS = -L/opt/homebrew/lib -lGLEW -lglfw -framework OpenGL

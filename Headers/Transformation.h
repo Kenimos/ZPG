@@ -1,31 +1,25 @@
 // Transformation.h
 #pragma once
 
+#include <vector>
+#include <memory>
 #include <glm/glm.hpp>
-#include <glm/gtc/quaternion.hpp>
+#include "TransformationComponent.h"
 
-class Transformation
-{
+class Transformation {
 public:
     Transformation();
+    ~Transformation();
 
-    void setPosition(const glm::vec3& position);
-    const glm::vec3& getPosition() const;
+    glm::mat4 getModelMatrix();
 
-    void setRotation(float angleDegrees, const glm::vec3& axis);
-    float getRotationAngle() const; 
-    const glm::quat& getOrientation() const;
+    void addTransformation(std::unique_ptr<TransformationComponent> component);
+    void clearTransformations();
 
-    void setScale(const glm::vec3& scale);
-    const glm::vec3& getScale() const;
-
-    glm::mat4 getModelMatrix() const;
+    void translate(const glm::vec3& translation);
+    void rotate(float angleDegrees, const glm::vec3& axis);
+    void scale(const glm::vec3& scalingFactors);
 
 private:
-    glm::vec3 position;
-    glm::quat orientation;
-    glm::vec3 scale;
-
-    float rotationAngleDegrees; 
-    glm::vec3 rotationAxis;     
+    std::vector<std::unique_ptr<TransformationComponent>> components;
 };

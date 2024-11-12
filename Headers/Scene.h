@@ -1,22 +1,25 @@
 // Scene.h
+#pragma once
 
-#ifndef SCENE_H
-#define SCENE_H
+// No OpenGL headers included here
 
-#include <vector>
-#include "DrawableObject.h"
+
 #include "Camera.h"
-#include "Generator.h"
+#include "Model.h"
+#include "ShaderProgram.h"
+#include "DrawableObject.h"
 #include "Light.h"
 #include "FlashLight.h"
+#include <vector>
+#include "Generator.h"
 
-// Scene.h
-
-class Scene
-{
+class Scene {
 public:
-    Scene(Camera *camera);
+    Scene(Camera* camera);
     ~Scene();
+
+    void initShaders();
+    void switchShaders();
 
     void initScene1();
     void initScene2();
@@ -26,39 +29,43 @@ public:
     void draw();
     void update(float deltaTime);
 
-    void switchShaders();
     void toggleFlashLightIntensity();
 
 private:
-    Camera *camera;
+    Camera* camera;
 
-    std::vector<DrawableObject *> drawableObjects;
-    std::vector<Light *> lights;
-    std::vector<ShaderProgram *> shaders;
-    std::vector<size_t> lightSphereIndices;
+    // Models
+    Model* treeModel;
+    Model* bushModel;
+    Model* sphereModel;
+    Model* giftModel;
 
-    Model *treeModel;
-    Model *bushModel;
-    Model *sphereModel;
-    Model *giftModel;
+    // Shaders
+    ShaderProgram* constantShader;
+    ShaderProgram* lambertShader;
+    ShaderProgram* phongShader;
+    ShaderProgram* blinnPhongShader;
+    ShaderProgram* spotlightShader;
 
-    ShaderProgram *constantShader;
-    ShaderProgram *lambertShader;
-    ShaderProgram *phongShader;
-    ShaderProgram *blinnPhongShader;
-    ShaderProgram *spotlightShader;
-
+    std::vector<ShaderProgram*> shaders;
     int currentShaderIndex;
 
-    void initShaders();
+    // Drawable Objects
+    std::vector<DrawableObject*> drawableObjects;
+
+    // Lights
+    std::vector<Light*> lights;
+    FlashLight* flashLight;
+
+    // For Scene 3: Indices of light spheres in drawableObjects
+    std::vector<size_t> lightSphereIndices;
+
+    // Random generator
+    Generator generator;
+
+    // Helper Methods
     void loadModelsScene1();
     void loadModelsScene2();
     void loadModelsScene3();
     void loadModelsScene4();
-
-    FlashLight *flashLight;
-
-    Generator generator;
 };
-
-#endif // SCENE_H

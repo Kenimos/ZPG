@@ -1,22 +1,15 @@
 // Rotation.h
+#pragma once
 
-#ifndef ROTATION_H
-#define ROTATION_H
-
+#include "TransformationComponent.h"
 #include <glm/glm.hpp>
-#include <glm/gtc/quaternion.hpp>
 
-class Rotation
-{
+class Rotation : public TransformationComponent {
 public:
-    Rotation();
-    ~Rotation();
-
-    void setRotation(float angleDegrees, const glm::vec3& axis);
-    glm::quat getOrientation() const;
+    Rotation(float angleDegrees, const glm::vec3& axis);
+    glm::mat4 getMatrix() const override;
 
 private:
-    glm::quat orientation;
+    float angleDegrees; 
+    glm::vec3 axis;
 };
-
-#endif // ROTATION_H

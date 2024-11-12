@@ -1,12 +1,17 @@
-
+// DrawableObject.cpp
 #include "DrawableObject.h"
 #include <glm/gtc/matrix_transform.hpp>
+#include <iostream>
 
 DrawableObject::DrawableObject(Model* model, ShaderProgram* shaderProgram)
     : model(model), shaderProgram(shaderProgram), color(glm::vec3(1.0f)),
       rotationSpeed(0.0f), velocity(0.0f), rotate(false), move(false)
 {
-    
+}
+
+DrawableObject::~DrawableObject()
+{
+    // Assuming Transformation manages its own memory via unique_ptr
 }
 
 Transformation& DrawableObject::getTransformation()
@@ -54,22 +59,27 @@ void DrawableObject::update(float deltaTime)
     if (rotate)
     {
         float angleIncrement = rotationSpeed * deltaTime; 
-        float currentAngle = transformation.getRotationAngle();
-        currentAngle += angleIncrement;
-        transformation.setRotation(currentAngle, glm::vec3(0.0f, 1.0f, 0.0f));
+        transformation.rotate(angleIncrement, glm::vec3(0.0f, 1.0f, 0.0f));
     }
 
     if (move)
     {
-        glm::vec3 newPosition = transformation.getPosition() + velocity * deltaTime;
-        transformation.setPosition(newPosition);
+        glm::vec3 displacement = velocity * deltaTime;
+        transformation.translate(displacement);
     }
 }
 
 void DrawableObject::draw()
 {
+    if (!shaderProgram)
+    {
+        std::cerr << "ERROR: ShaderProgram is not set for DrawableObject." << std::endl;
+        return;
+    }
+
     shaderProgram->use();
-    shaderProgram->setMat4("modelMatrix", transformation.getModelMatrix());
+    glm::mat4 modelMatrix = transformation.getModelMatrix();
+    shaderProgram->setMat4("modelMatrix", modelMatrix);
     shaderProgram->setVec3("materialColor", color);
     model->draw();
 }

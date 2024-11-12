@@ -1,6 +1,10 @@
+// Add GLEW include first
+#include <GL/glew.h>
 
-
+// Then include the Scene header
 #include "Scene.h"
+
+// ... rest of your includes
 #include "../Models/tree.h"
 #include "../Models/bushes.h"
 #include "../Models/sphere.h"
@@ -10,11 +14,11 @@
 #include <iostream>
 #include "ShaderLoader.h"
 
-Scene::Scene(Camera *camera)
+Scene::Scene(Camera* camera)
     : camera(camera),
       treeModel(nullptr), bushModel(nullptr), sphereModel(nullptr), giftModel(nullptr),
       constantShader(nullptr), lambertShader(nullptr), phongShader(nullptr), blinnPhongShader(nullptr),
-      currentShaderIndex(0)
+      spotlightShader(nullptr), currentShaderIndex(0), flashLight(nullptr)
 {
 }
 
@@ -29,14 +33,15 @@ Scene::~Scene()
     delete lambertShader;
     delete phongShader;
     delete blinnPhongShader;
+    delete spotlightShader;
 
-    for (auto *object : drawableObjects)
+    for (auto* object : drawableObjects)
     {
         delete object;
     }
     drawableObjects.clear();
 
-    for (auto *light : lights)
+    for (auto* light : lights)
     {
         delete light;
     }
@@ -72,7 +77,7 @@ void Scene::initShaders()
     shaders.push_back(phongShader);
     shaders.push_back(blinnPhongShader);
 
-    for (auto *shader : shaders)
+    for (auto* shader : shaders)
     {
         camera->attach(shader);
     }
@@ -84,12 +89,14 @@ void Scene::switchShaders()
 {
     currentShaderIndex = (currentShaderIndex + 1) % shaders.size();
 
-    ShaderProgram *newShader = shaders[currentShaderIndex];
+    ShaderProgram* newShader = shaders[currentShaderIndex];
 
-    for (auto *object : drawableObjects)
+    for (auto* object : drawableObjects)
     {
         object->setShaderProgram(newShader);
     }
+
+    std::cout << "Switched to shader index " << currentShaderIndex << std::endl;
 }
 
 void Scene::initScene1()
@@ -118,28 +125,30 @@ void Scene::initScene4()
 
 void Scene::loadModelsScene1()
 {
-
+    // Load tree model
     std::vector<float> treeData(tree, tree + sizeof(tree) / sizeof(float));
     treeModel = new Model();
     treeModel->loadFromData(treeData);
 
+    // Load bush model
     std::vector<float> bushData(bushes, bushes + sizeof(bushes) / sizeof(float));
     bushModel = new Model();
     bushModel->loadFromData(bushData);
 
+    // Create 50 tree objects
     for (int i = 0; i < 50; ++i)
     {
-        DrawableObject *treeObject = new DrawableObject(treeModel, phongShader);
+        DrawableObject* treeObject = new DrawableObject(treeModel, phongShader);
 
         float posX = generator.getRandomFloat(-50.0f, 50.0f);
         float posZ = generator.getRandomFloat(-50.0f, 50.0f);
-        treeObject->getTransformation().setPosition(glm::vec3(posX, 0.0f, posZ));
+        treeObject->getTransformation().translate(glm::vec3(posX, 0.0f, posZ));
 
         float rotationAngle = generator.getRandomFloat(-50.0f, 50.0f);
-        treeObject->getTransformation().setRotation(rotationAngle, glm::vec3(0.0f, 1.0f, 0.0f));
+        treeObject->getTransformation().rotate(rotationAngle, glm::vec3(0.0f, 1.0f, 0.0f));
 
         float scaleValue = generator.getRandomFloat(0.5f, 2.0f);
-        treeObject->getTransformation().setScale(glm::vec3(scaleValue));
+        treeObject->getTransformation().scale(glm::vec3(scaleValue));
         treeObject->setColor(glm::vec3(1.0f, 1.0f, 1.0f));
 
         int randomChoice = generator.getRandomInt(0, 2);
@@ -149,7 +158,7 @@ void Scene::loadModelsScene1()
             float rotationSpeed = generator.getRandomFloat(8.0f, 20.0f);
             treeObject->setRotationSpeed(rotationSpeed);
         }
-        else if (randomChoice == 1 )
+        else if (randomChoice == 1)
         {
             treeObject->enableMovement(true);
             glm::vec3 velocity(generator.getRandomVec3(-1.0f, 1.0f, true));
@@ -159,29 +168,31 @@ void Scene::loadModelsScene1()
         drawableObjects.push_back(treeObject);
     }
 
+    // Create 50 bush objects
     for (int i = 0; i < 50; ++i)
     {
-        DrawableObject *bushObject = new DrawableObject(bushModel, phongShader);
+        DrawableObject* bushObject = new DrawableObject(bushModel, phongShader);
 
         float posX = generator.getRandomFloat(-50.0f, 50.0f);
         float posZ = generator.getRandomFloat(-50.0f, 50.0f);
-        bushObject->getTransformation().setPosition(glm::vec3(posX, 0.0f, posZ));
+        bushObject->getTransformation().translate(glm::vec3(posX, 0.0f, posZ));
 
         float rotationAngle = generator.getRandomFloat(-50.0f, 50.0f);
-        bushObject->getTransformation().setRotation(rotationAngle, glm::vec3(0.0f, 1.0f, 0.0f));
+        bushObject->getTransformation().rotate(rotationAngle, glm::vec3(0.0f, 1.0f, 0.0f));
 
         float scaleValue = generator.getRandomFloat(0.5f, 2.0f);
-        bushObject->getTransformation().setScale(glm::vec3(scaleValue));
+        bushObject->getTransformation().scale(glm::vec3(scaleValue));
         bushObject->setColor(glm::vec3(1.0f, 1.0f, 1.0f));
 
         drawableObjects.push_back(bushObject);
     }
 
+    // Initialize lights
     lights.clear();
 
-    Light *light1 = new Light(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(1.0f, 1.0f, 1.0f), 5.0f);
-    Light *light2 = new Light(glm::vec3(50.0f, 50.0f, 50.0f), glm::vec3(0.0f, 1.0f, 0.0f), 1.0f);
-    Light *light3 = new Light(glm::vec3(-50.0f, 50.0f, -50.0f), glm::vec3(0.0f, 1.0f, 0.0f), 1.0f);
+    Light* light1 = new Light(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(1.0f, 1.0f, 1.0f), 5.0f);
+    Light* light2 = new Light(glm::vec3(50.0f, 50.0f, 50.0f), glm::vec3(0.0f, 1.0f, 0.0f), 1.0f);
+    Light* light3 = new Light(glm::vec3(-50.0f, 50.0f, -50.0f), glm::vec3(0.0f, 1.0f, 0.0f), 1.0f);
 
     lights.push_back(light1);
     lights.push_back(light2);
@@ -190,35 +201,38 @@ void Scene::loadModelsScene1()
 
 void Scene::loadModelsScene2()
 {
+    // Load sphere model
     std::vector<float> sphereData(sphere, sphere + sizeof(sphere) / sizeof(float));
     sphereModel = new Model();
     sphereModel->loadFromData(sphereData);
 
-    DrawableObject *phongSphere = new DrawableObject(sphereModel, phongShader);
-    phongSphere->getTransformation().setPosition(glm::vec3(-2.0f, 0.0f, -2.0f));
+    // Create sphere objects with different shaders
+    DrawableObject* phongSphere = new DrawableObject(sphereModel, phongShader);
+    phongSphere->getTransformation().translate(glm::vec3(-2.0f, 0.0f, -2.0f));
     phongSphere->setColor(glm::vec3(0.9f, 0.9f, 1.0f));
     drawableObjects.push_back(phongSphere);
 
-    DrawableObject *blinnSphere = new DrawableObject(sphereModel, blinnPhongShader);
-    blinnSphere->getTransformation().setPosition(glm::vec3(2.0f, 0.0f, -2.0f));
+    DrawableObject* blinnSphere = new DrawableObject(sphereModel, blinnPhongShader);
+    blinnSphere->getTransformation().translate(glm::vec3(2.0f, 0.0f, -2.0f));
     blinnSphere->setColor(glm::vec3(0.9f, 0.9f, 1.0f));
     drawableObjects.push_back(blinnSphere);
 
-    DrawableObject *lambertSphere = new DrawableObject(sphereModel, lambertShader);
-    lambertSphere->getTransformation().setPosition(glm::vec3(-2.0f, 0.0f, 2.0f));
+    DrawableObject* lambertSphere = new DrawableObject(sphereModel, lambertShader);
+    lambertSphere->getTransformation().translate(glm::vec3(-2.0f, 0.0f, 2.0f));
     lambertSphere->setColor(glm::vec3(0.9f, 0.9f, 1.0f));
     drawableObjects.push_back(lambertSphere);
 
-    DrawableObject *constantSphere = new DrawableObject(sphereModel, constantShader);
-    constantSphere->getTransformation().setPosition(glm::vec3(2.0f, 0.0f, 2.0f));
+    DrawableObject* constantSphere = new DrawableObject(sphereModel, constantShader);
+    constantSphere->getTransformation().translate(glm::vec3(2.0f, 0.0f, 2.0f));
     constantSphere->setColor(glm::vec3(0.9f, 0.9f, 1.0f));
     drawableObjects.push_back(constantSphere);
 
+    // Initialize lights
     lights.clear();
 
-    Light *light1 = new Light(glm::vec3(-2.0f, 0.0f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f), 1.0f);
-    Light *light2 = new Light(glm::vec3(2.0f, 0.0f, 0.0f), glm::vec3(1.0f, 0.0f, 0.0f), 1.0f);
-    Light *light3 = new Light(glm::vec3(0.0f, 14.0f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f), 1.0f);
+    Light* light1 = new Light(glm::vec3(-2.0f, 0.0f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f), 1.0f);
+    Light* light2 = new Light(glm::vec3(2.0f, 0.0f, 0.0f), glm::vec3(1.0f, 0.0f, 0.0f), 1.0f);
+    Light* light3 = new Light(glm::vec3(0.0f, 14.0f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f), 1.0f);
 
     lights.push_back(light1);
     lights.push_back(light2);
@@ -227,39 +241,44 @@ void Scene::loadModelsScene2()
 
 void Scene::loadModelsScene3()
 {
+    // Load sphere model if not already loaded
+    if (!sphereModel)
+    {
+        std::vector<float> sphereData(sphere, sphere + sizeof(sphere) / sizeof(float));
+        sphereModel = new Model();
+        sphereModel->loadFromData(sphereData);
+    }
 
-    std::vector<float> sphereData(sphere, sphere + sizeof(sphere) / sizeof(float));
-    sphereModel = new Model();
-    sphereModel->loadFromData(sphereData);
-
-    DrawableObject *sphereObject = new DrawableObject(sphereModel, phongShader);
-    sphereObject->getTransformation().setPosition(glm::vec3(0.0f, 0.0f, 0.0f));
+    // Create central sphere object
+    DrawableObject* sphereObject = new DrawableObject(sphereModel, phongShader);
+    sphereObject->getTransformation().translate(glm::vec3(0.0f, 0.0f, 0.0f));
     sphereObject->setColor(glm::vec3(1.0f, 1.0f, 1.0f));
     drawableObjects.push_back(sphereObject);
 
+    // Initialize lights and corresponding light spheres
     lights.clear();
     lightSphereIndices.clear();
-
-    
 
     std::vector<glm::vec3> lightColors = {
         glm::vec3(1.0f, 0.0f, 0.0f),
         glm::vec3(0.0f, 1.0f, 0.0f),
-        glm::vec3(0.0f, 0.0f, 1.0f)};
+        glm::vec3(0.0f, 0.0f, 1.0f)
+    };
 
     for (int i = 0; i < 3; ++i)
     {
         glm::vec3 randomPosition(generator.getRandomVec3(-4.0f, 4.0f, true));
         glm::vec3 randomVelocity(generator.getRandomVec3(1.0f, 10.0f, true));
 
-        Light *light = new Light(randomPosition, lightColors[i], 4.0f);
+        Light* light = new Light(randomPosition, lightColors[i], 4.0f);
         light->setVelocity(randomVelocity);
 
         lights.push_back(light);
 
-        DrawableObject *lightSphere = new DrawableObject(sphereModel, constantShader);
-        lightSphere->getTransformation().setPosition(light->getPosition());
-        lightSphere->getTransformation().setScale(glm::vec3(0.2f));
+        // Create a small sphere to represent the light
+        DrawableObject* lightSphere = new DrawableObject(sphereModel, constantShader);
+        lightSphere->getTransformation().translate(light->getPosition());
+        lightSphere->getTransformation().scale(glm::vec3(0.2f));
         lightSphere->setColor(light->getColor());
         drawableObjects.push_back(lightSphere);
 
@@ -269,7 +288,7 @@ void Scene::loadModelsScene3()
 
 void Scene::loadModelsScene4()
 {
-
+    // Load sphere model if not already loaded
     if (!sphereModel)
     {
         std::vector<float> sphereData(sphere, sphere + sizeof(sphere) / sizeof(float));
@@ -277,21 +296,23 @@ void Scene::loadModelsScene4()
         sphereModel->loadFromData(sphereData);
     }
 
-    DrawableObject *sphereObject = new DrawableObject(sphereModel, phongShader);
-    sphereObject->getTransformation().setPosition(glm::vec3(0.0f, 0.0f, 0.0f));
+    // Create central sphere object
+    DrawableObject* sphereObject = new DrawableObject(sphereModel, phongShader);
+    sphereObject->getTransformation().translate(glm::vec3(0.0f, 0.0f, 0.0f));
     sphereObject->setColor(glm::vec3(1.0f, 1.0f, 1.0f));
     drawableObjects.push_back(sphereObject);
 
+    // Initialize FlashLight
     lights.clear();
 
     flashLight = new FlashLight(camera, glm::vec3(1.0f, 1.0f, 1.0f), 1.0f);
     lights.push_back(flashLight);
 
     flashLight->attach(spotlightShader);
-
     flashLight->notifyObservers();
 
-    for (auto *shader : shaders)
+    // Assign lights to shaders
+    for (auto* shader : shaders)
     {
         shader->setLights(lights);
     }
@@ -299,13 +320,12 @@ void Scene::loadModelsScene4()
 
 void Scene::draw()
 {
-
-    for (auto *shader : shaders)
+    for (auto* shader : shaders)
     {
         shader->setLights(lights);
     }
 
-    for (auto *object : drawableObjects)
+    for (auto* object : drawableObjects)
     {
         object->draw();
     }
@@ -313,8 +333,7 @@ void Scene::draw()
 
 void Scene::update(float deltaTime)
 {
-
-    for (auto *object : drawableObjects)
+    for (auto* object : drawableObjects)
     {
         object->update(deltaTime);
     }
@@ -350,7 +369,12 @@ void Scene::update(float deltaTime)
 
         if (i < lightSphereIndices.size())
         {
-            drawableObjects[lightSphereIndices[i]]->getTransformation().setPosition(lights[i]->getPosition());
+            // Update the position of the corresponding light sphere
+            DrawableObject* lightSphere = drawableObjects[lightSphereIndices[i]];
+            glm::vec3 currentPosition = glm::vec3(lightSphere->getTransformation().getModelMatrix()[3]);
+            glm::vec3 newPosition = pos;
+            glm::vec3 translation = newPosition - currentPosition;
+            lightSphere->getTransformation().translate(translation);
         }
     }
 }

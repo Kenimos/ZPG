@@ -1,22 +1,10 @@
-
-
+// Rotation.cpp
 #include "Rotation.h"
+#include <glm/gtc/matrix_transform.hpp>
 
-Rotation::Rotation()
-    : orientation(glm::quat())
-{
-}
+Rotation::Rotation(float angleDegrees, const glm::vec3& axis)
+    : angleDegrees(angleDegrees), axis(glm::normalize(axis)) {}
 
-Rotation::~Rotation()
-{
-}
-
-void Rotation::setRotation(float angleDegrees, const glm::vec3 &axis)
-{
-    orientation = glm::angleAxis(glm::radians(angleDegrees), glm::normalize(axis));
-}
-
-glm::quat Rotation::getOrientation() const
-{
-    return orientation;
+glm::mat4 Rotation::getMatrix() const {
+    return glm::rotate(glm::mat4(1.0f), glm::radians(angleDegrees), axis);
 }
