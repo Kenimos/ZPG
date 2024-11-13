@@ -1,10 +1,5 @@
-// Add GLEW include first
 #include <GL/glew.h>
-
-// Then include the Scene header
 #include "Scene.h"
-
-// ... rest of your includes
 #include "../Models/tree.h"
 #include "../Models/bushes.h"
 #include "../Models/sphere.h"
@@ -13,6 +8,7 @@
 #include <glm/glm.hpp>
 #include <iostream>
 #include "ShaderLoader.h"
+#include "Transformation.h"
 
 Scene::Scene(Camera* camera)
     : camera(camera),
@@ -135,6 +131,7 @@ void Scene::loadModelsScene1()
     bushModel = new Model();
     bushModel->loadFromData(bushData);
 
+    Transformation t;
     // Create 50 tree objects
     for (int i = 0; i < 50; ++i)
     {

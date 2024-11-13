@@ -11,8 +11,10 @@ App::App()
       camera(glm::vec3(0.0f, 0.0f, 5.0f)),
       width(800), height(600),
       currentSceneIndex(0),
-      keyStates{}
+      keyStates{},
+      cameraControlActive(false)
 {
+
 }
 
 App::~App()
@@ -76,7 +78,7 @@ bool App::init()
     glfwSetScrollCallback(window, scrollCallback);
     glfwSetWindowUserPointer(window, this);
 
-    glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+    glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
 
     return true;
 }
@@ -139,6 +141,17 @@ void App::processInput()
     if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
     {
         glfwSetWindowShouldClose(window, true);
+    }
+
+    if (glfwGetKey(window, GLFW_KEY_LEFT_CONTROL) == GLFW_PRESS)
+    {
+        cameraControlActive = true;
+        glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+    }
+    else
+    {
+        cameraControlActive = false;
+        glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
     }
 
     float currentFrame = glfwGetTime();
@@ -226,7 +239,10 @@ void App::framebufferSizeCallback(GLFWwindow *window, int width, int height)
 void App::mouseCallback(GLFWwindow *window, double xpos, double ypos)
 {
     App *app = static_cast<App *>(glfwGetWindowUserPointer(window));
-    app->camera.processMouseMovement(xpos, ypos);
+    if(app->cameraControlActive)
+    {
+        app->camera.processMouseMovement(xpos, ypos);
+    }
 }
 
 void App::scrollCallback(GLFWwindow *window, double xoffset, double yoffset)

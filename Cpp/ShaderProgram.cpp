@@ -128,7 +128,7 @@ void ShaderProgram::updateLightUniforms(Light *light)
 {
     if (lights.empty())
     {
-        std::cerr << "No lights available to update." << std::endl;
+        // std::cerr << "No lights available to update." << std::endl;
         return;
     }
 
