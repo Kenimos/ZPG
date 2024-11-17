@@ -1,16 +1,54 @@
-
-
 #include "Light.h"
 
-Light::Light(const glm::vec3& position, const glm::vec3& color, float intensity)
-    : position(position), color(color), intensity(intensity), velocity(0.0f)
+Light::Light(LightType type, const glm::vec3& positionOrDirection, const glm::vec3& color, float intensity)
+    : type(type), positionOrDirection(positionOrDirection), direction(glm::vec3(0.0f)),
+      innerCutOff(0.0f), outerCutOff(0.0f),
+      color(color), intensity(intensity), velocity(glm::vec3(0.0f))
 {
 }
 
-void Light::setPosition(const glm::vec3& position)
+Light::~Light()
 {
-    this->position = position;
+}
+
+void Light::setType(LightType type) {
+    this->type = type;
+}
+
+LightType Light::getType() const {
+    return type;
+}
+
+void Light::setPositionOrDirection(const glm::vec3& posOrDir) {
+    this->positionOrDirection = posOrDir;
     notifyObservers();
+}
+
+glm::vec3 Light::getPositionOrDirection() const {
+    return positionOrDirection;
+}
+
+void Light::setDirection(const glm::vec3& direction) {
+    this->direction = direction;
+    notifyObservers();
+}
+
+glm::vec3 Light::getDirection() const {
+    return direction;
+}
+
+void Light::setCutOffs(float innerCutOff, float outerCutOff) {
+    this->innerCutOff = innerCutOff;
+    this->outerCutOff = outerCutOff;
+    notifyObservers();
+}
+
+float Light::getInnerCutOff() const {
+    return innerCutOff;
+}
+
+float Light::getOuterCutOff() const {
+    return outerCutOff;
 }
 
 void Light::setColor(const glm::vec3& color)
@@ -19,20 +57,15 @@ void Light::setColor(const glm::vec3& color)
     notifyObservers();
 }
 
+glm::vec3 Light::getColor() const
+{
+    return color;
+}
+
 void Light::setIntensity(float intensity)
 {
     this->intensity = intensity;
     notifyObservers();
-}
-
-glm::vec3 Light::getPosition() const
-{
-    return position;
-}
-
-glm::vec3 Light::getColor() const
-{
-    return color;
 }
 
 float Light::getIntensity() const
@@ -52,8 +85,8 @@ glm::vec3 Light::getVelocity() const
 
 void Light::update(float deltaTime)
 {
-    position += velocity * deltaTime;
-    notifyObservers(); 
+    positionOrDirection += velocity * deltaTime;
+    notifyObservers();
 }
 
 void Light::notifyObservers()

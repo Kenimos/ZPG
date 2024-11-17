@@ -7,9 +7,13 @@ in vec3 fragNormal;
 out vec4 outColor;
 
 struct Light {
+    int type; // 0: Point light, 1: Directional light, 2: Spotlight
     vec3 position;
+    vec3 direction;
     vec3 color;
     float intensity;
+    float innerCutOff;
+    float outerCutOff;
 };
 
 #define MAX_LIGHTS 10
@@ -30,33 +34,54 @@ void main()
 
     float ambientStrength = 0.1;
     float specularStrength = 0.5;
-
-    float constant = 1.0;    
-    float linear = 0.09;   
-    float quadratic = 0.032;
+    float materialShininess = 32.0;
 
     for (int i = 0; i < numLights; ++i)
     {
         Light light = lights[i];
 
-        vec3 ambientComponent = ambientStrength * light.color * light.intensity;
+        vec3 lightDir;
+        float attenuation = 1.0;
+
+        // Determine light direction and attenuation based on light type
+        if (light.type == 0) // Point light
+        {
+            lightDir = normalize(light.position - fragPosition);
+            float distance = length(light.position - fragPosition);
+            attenuation = 1.0 / (distance * distance);
+        }
+        else if (light.type == 1) // Directional light
+        {
+            lightDir = normalize(-light.direction);
+        }
+        else if (light.type == 2) // Spotlight
+        {
+            lightDir = normalize(light.position - fragPosition);
+            float theta = dot(lightDir, normalize(-light.direction));
+            float epsilon = light.innerCutOff - light.outerCutOff;
+            float intensitySpot = clamp((theta - light.outerCutOff) / epsilon, 0.0, 1.0);
+
+            attenuation = intensitySpot;
+
+            // Optional: Add distance attenuation for spotlight
+            float distance = length(light.position - fragPosition);
+            attenuation *= 1.0 / (distance * distance);
+        }
+
+        // Ambient component
+        vec3 ambientComponent = ambientStrength * light.color * light.intensity * attenuation;
         ambient += ambientComponent;
 
-        vec3 lightDir = normalize(light.position - fragPosition);
+        // Diffuse component
         float diff = max(dot(norm, lightDir), 0.0);
+        vec3 diffuseComponent = diff * light.color * light.intensity * attenuation;
+        diffuse += diffuseComponent;
 
-        if (diff > 0.0)
-        {
-            float distance = length(light.position - fragPosition);
-            float attenuation = 1.0 / (constant + linear * distance + quadratic * (distance * distance));
-            vec3 diffuseComponent = diff * light.color * light.intensity * attenuation;
-            diffuse += diffuseComponent;
-
-            vec3 halfwayDir = normalize(lightDir + viewDir);
-            float spec = pow(max(dot(norm, halfwayDir), 0.0), 32.0);
-            vec3 specularComponent = specularStrength * spec * light.color * light.intensity * attenuation;
-            specular += specularComponent;
-        }
+        // Specular component
+        vec3 halfwayDir = normalize(lightDir + viewDir);
+        float spec = pow(max(dot(norm, halfwayDir), 0.0), materialShininess);
+        vec3 specularComponent = specularStrength * spec * light.color * light.intensity * attenuation;
+        specular += specularComponent;
     }
 
     vec3 result = (ambient + diffuse + specular) * materialColor;

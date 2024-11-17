@@ -1,4 +1,3 @@
-
 #include "ShaderProgram.h"
 #include <iostream>
 #include <glm/gtc/type_ptr.hpp>
@@ -25,7 +24,10 @@ void ShaderProgram::retrieveUniformLocations()
         "projectionMatrix",
         "materialColor",
         "viewPos",
-        "numLights"};
+        "numLights",
+        "ambientStrength",
+        "materialShininess"
+    };
 
     for (const auto &name : uniforms)
     {
@@ -38,9 +40,13 @@ void ShaderProgram::retrieveUniformLocations()
         std::string index = std::to_string(i);
         std::string baseName = "lights[" + index + "].";
 
+        uniformLocations[baseName + "type"] = glGetUniformLocation(programID, (baseName + "type").c_str());
         uniformLocations[baseName + "position"] = glGetUniformLocation(programID, (baseName + "position").c_str());
+        uniformLocations[baseName + "direction"] = glGetUniformLocation(programID, (baseName + "direction").c_str());
         uniformLocations[baseName + "color"] = glGetUniformLocation(programID, (baseName + "color").c_str());
         uniformLocations[baseName + "intensity"] = glGetUniformLocation(programID, (baseName + "intensity").c_str());
+        uniformLocations[baseName + "innerCutOff"] = glGetUniformLocation(programID, (baseName + "innerCutOff").c_str());
+        uniformLocations[baseName + "outerCutOff"] = glGetUniformLocation(programID, (baseName + "outerCutOff").c_str());
     }
 }
 
@@ -57,6 +63,9 @@ void ShaderProgram::use()
     setMat4("projectionMatrix", projectionMatrix);
 
     setVec3("viewPos", cameraPosition);
+
+    setFloat("ambientStrength", 0.1f);
+    setFloat("materialShininess", 32.0f);
 }
 
 void ShaderProgram::setMat4(const std::string &name, const glm::mat4 &mat)
@@ -98,6 +107,16 @@ void ShaderProgram::setInt(const std::string &name, int value)
     }
 }
 
+void ShaderProgram::setAmbientStrength(float strength)
+{
+    setFloat("ambientStrength", strength);
+}
+
+void ShaderProgram::setMaterialShininess(float shininess)
+{
+    setFloat("materialShininess", shininess);
+}
+
 void ShaderProgram::update(Subject *subject)
 {
     Camera *camera = dynamic_cast<Camera *>(subject);
@@ -114,7 +133,6 @@ void ShaderProgram::update(Subject *subject)
     }
     else if (Light *light = dynamic_cast<Light *>(subject))
     {
-
         use();
         updateLightUniforms(light);
     }
@@ -128,7 +146,6 @@ void ShaderProgram::updateLightUniforms(Light *light)
 {
     if (lights.empty())
     {
-        // std::cerr << "No lights available to update." << std::endl;
         return;
     }
 
@@ -140,9 +157,26 @@ void ShaderProgram::updateLightUniforms(Light *light)
     }
 
     std::string baseName = "lights[" + std::to_string(lightIndex) + "].";
-    setVec3(baseName + "position", light->getPosition());
+
+    setInt(baseName + "type", static_cast<int>(light->getType()));
     setVec3(baseName + "color", light->getColor());
     setFloat(baseName + "intensity", light->getIntensity());
+
+    if (light->getType() == POINT_LIGHT || light->getType() == SPOTLIGHT)
+    {
+        setVec3(baseName + "position", light->getPositionOrDirection());
+    }
+
+    if (light->getType() == DIRECTIONAL_LIGHT || light->getType() == SPOTLIGHT)
+    {
+        setVec3(baseName + "direction", glm::normalize(light->getDirection()));
+    }
+
+    if (light->getType() == SPOTLIGHT)
+    {
+        setFloat(baseName + "innerCutOff", light->getInnerCutOff());
+        setFloat(baseName + "outerCutOff", light->getOuterCutOff());
+    }
 }
 
 int ShaderProgram::getLightIndex(Light *light)
@@ -173,7 +207,26 @@ void ShaderProgram::setLights(const std::vector<Light *> &lights)
     for (size_t i = 0; i < lights.size(); ++i)
     {
         std::string baseName = "lights[" + std::to_string(i) + "].";
-        setVec3(baseName + "position", lights[i]->getPosition());
+
+        setInt(baseName + "type", static_cast<int>(lights[i]->getType()));
+
+        if (lights[i]->getType() == POINT_LIGHT || lights[i]->getType() == SPOTLIGHT)
+        {
+            setVec3(baseName + "position", lights[i]->getPositionOrDirection());
+        }
+
+        if (lights[i]->getType() == DIRECTIONAL_LIGHT || lights[i]->getType() == SPOTLIGHT)
+        {
+            setVec3(baseName + "direction", glm::normalize(lights[i]->getDirection()));
+        }
+
+        if (lights[i]->getType() == SPOTLIGHT)
+        {
+            // Corrected lines: Removed unnecessary glm::cos and glm::radians
+            setFloat(baseName + "innerCutOff", lights[i]->getInnerCutOff());
+            setFloat(baseName + "outerCutOff", lights[i]->getOuterCutOff());
+        }
+
         setVec3(baseName + "color", lights[i]->getColor());
         setFloat(baseName + "intensity", lights[i]->getIntensity());
     }

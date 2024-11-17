@@ -1,8 +1,11 @@
 #include "FlashLight.h"
+#include <glm/gtc/matrix_transform.hpp>
 
-FlashLight::FlashLight(Camera *camera, const glm::vec3 &color, float intensity)
-    : Light(camera->getPosition(), color, intensity), camera(camera)
+FlashLight::FlashLight(Camera *camera, const glm::vec3 &color, float intensity, float innerCutOffDegrees, float outerCutOffDegrees)
+    : Light(SPOTLIGHT, camera->getPosition(), color, intensity), camera(camera)
 {
+    setDirection(camera->getFront());
+    setCutOffs(innerCutOffDegrees, outerCutOffDegrees);
     camera->attach(this);
 }
 
@@ -13,10 +16,11 @@ FlashLight::~FlashLight()
 
 void FlashLight::update(Subject *subject)
 {
-
     if (subject == camera)
     {
-        setPosition(camera->getPosition());
+        setPositionOrDirection(camera->getPosition());
+        setDirection(camera->getFront());
+        notifyObservers();
     }
 }
 
@@ -28,6 +32,14 @@ void FlashLight::toggleIntensity()
     }
     else
     {
-        setIntensity(1.0f);
+        setIntensity(100.0f);
     }
+}
+
+void FlashLight::setCutOffs(float innerCutOffDegrees, float outerCutOffDegrees)
+{
+    float innerCutOff = glm::cos(glm::radians(innerCutOffDegrees));
+    float outerCutOff = glm::cos(glm::radians(outerCutOffDegrees));
+    // Use Light's public setter method
+    Light::setCutOffs(innerCutOff, outerCutOff);
 }

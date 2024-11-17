@@ -77,9 +77,19 @@ void DrawableObject::draw()
         return;
     }
 
+   // Use the shader program
     shaderProgram->use();
+
+    // Set uniforms
     glm::mat4 modelMatrix = transformation.getModelMatrix();
     shaderProgram->setMat4("modelMatrix", modelMatrix);
     shaderProgram->setVec3("materialColor", color);
+    shaderProgram->setFloat("materialShininess", 32.0f); // Or appropriate value
+    shaderProgram->setFloat("ambientStrength", 0.1f); // Or appropriate value
+
+    // Now draw the model
     model->draw();
+
+    // Reset the shader program
+    glUseProgram(0);
 }

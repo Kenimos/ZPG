@@ -7,7 +7,7 @@
 class Subject
 {
 public:
-    virtual ~Subject() = default;
+    virtual ~Subject() {};
     void attach(Observer* observer);
     void detach(Observer* observer);
     void notifyObservers();
