@@ -1,17 +1,18 @@
-// DrawableObject.cpp
 #include "DrawableObject.h"
 #include <glm/gtc/matrix_transform.hpp>
 #include <iostream>
 
 DrawableObject::DrawableObject(Model* model, ShaderProgram* shaderProgram)
-    : model(model), shaderProgram(shaderProgram), color(glm::vec3(1.0f)),
-      rotationSpeed(0.0f), velocity(0.0f), rotate(false), move(false)
+    : model(model), shaderProgram(shaderProgram), color(glm::vec3(1.0f))
 {
+    // Initialize default material properties
+    material.ambientStrength = 0.1f;
+    material.specularStrength = 0.5f;
+    material.shininess = 32.0f;
 }
 
 DrawableObject::~DrawableObject()
 {
-    // Assuming Transformation manages its own memory via unique_ptr
 }
 
 Transformation& DrawableObject::getTransformation()
@@ -34,39 +35,9 @@ void DrawableObject::setShaderProgram(ShaderProgram* shaderProgram)
     this->shaderProgram = shaderProgram;
 }
 
-void DrawableObject::setRotationSpeed(float speed)
-{
-    this->rotationSpeed = speed;
-}
-
-void DrawableObject::setVelocity(const glm::vec3& velocity)
-{
-    this->velocity = velocity;
-}
-
-void DrawableObject::enableRotation(bool enable)
-{
-    this->rotate = enable;
-}
-
-void DrawableObject::enableMovement(bool enable)
-{
-    this->move = enable;
-}
-
 void DrawableObject::update(float deltaTime)
 {
-    if (rotate)
-    {
-        float angleIncrement = rotationSpeed * deltaTime; 
-        transformation.rotate(angleIncrement, glm::vec3(0.0f, 1.0f, 0.0f));
-    }
-
-    if (move)
-    {
-        glm::vec3 displacement = velocity * deltaTime;
-        transformation.translate(displacement);
-    }
+    transformation.update(deltaTime);
 }
 
 void DrawableObject::draw()
@@ -77,19 +48,37 @@ void DrawableObject::draw()
         return;
     }
 
-   // Use the shader program
+    // Use the shader program
     shaderProgram->use();
 
     // Set uniforms
     glm::mat4 modelMatrix = transformation.getModelMatrix();
     shaderProgram->setMat4("modelMatrix", modelMatrix);
     shaderProgram->setVec3("materialColor", color);
-    shaderProgram->setFloat("materialShininess", 32.0f); // Or appropriate value
-    shaderProgram->setFloat("ambientStrength", 0.1f); // Or appropriate value
+    shaderProgram->setFloat("materialShininess", material.shininess);
+    shaderProgram->setFloat("ambientStrength", material.ambientStrength);
+    shaderProgram->setFloat("specularStrength", material.specularStrength);
 
     // Now draw the model
     model->draw();
 
     // Reset the shader program
     glUseProgram(0);
+}
+
+glm::vec3 DrawableObject::getPosition() const
+{
+    glm::mat4 modelMatrix = transformation.getModelMatrix();
+    return glm::vec3(modelMatrix[3]);
+}
+
+// Implement the setMaterial and getMaterial methods
+void DrawableObject::setMaterial(const Material& material)
+{
+    this->material = material;
+}
+
+const Material& DrawableObject::getMaterial() const
+{
+    return material;
 }

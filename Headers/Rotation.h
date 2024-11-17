@@ -13,3 +13,16 @@ private:
     float angleDegrees; 
     glm::vec3 axis;
 };
+
+class DynamicRotation : public TransformationComponent
+{
+public:
+    DynamicRotation(float startAngleDegrees, const glm::vec3& axis, float angularVelocity);
+    glm::mat4 getMatrix() const override;
+    void update(float deltaTime) override;
+
+private:
+    float angleDegrees;
+    glm::vec3 axis;
+    float angularVelocity; 
+};

@@ -26,8 +26,8 @@ void ShaderProgram::retrieveUniformLocations()
         "viewPos",
         "numLights",
         "ambientStrength",
-        "materialShininess"
-    };
+        "specularStrength", // Added this line
+        "materialShininess"};
 
     for (const auto &name : uniforms)
     {
@@ -64,8 +64,9 @@ void ShaderProgram::use()
 
     setVec3("viewPos", cameraPosition);
 
-    setFloat("ambientStrength", 0.1f);
-    setFloat("materialShininess", 32.0f);
+    // Remove these lines since material properties are now set per object
+    // setFloat("ambientStrength", 0.1f);
+    // setFloat("materialShininess", 32.0f);
 }
 
 void ShaderProgram::setMat4(const std::string &name, const glm::mat4 &mat)
@@ -88,7 +89,7 @@ void ShaderProgram::setVec3(const std::string &name, const glm::vec3 &vec)
     glUniform3fv(it->second, 1, glm::value_ptr(vec));
 }
 
-void ShaderProgram::setFloat(const std::string &name, float value)
+void ShaderProgram::setFloat(const std::string& name, float value) const
 {
     auto it = uniformLocations.find(name);
     if (it == uniformLocations.end() || it->second == -1)
@@ -222,7 +223,6 @@ void ShaderProgram::setLights(const std::vector<Light *> &lights)
 
         if (lights[i]->getType() == SPOTLIGHT)
         {
-            // Corrected lines: Removed unnecessary glm::cos and glm::radians
             setFloat(baseName + "innerCutOff", lights[i]->getInnerCutOff());
             setFloat(baseName + "outerCutOff", lights[i]->getOuterCutOff());
         }

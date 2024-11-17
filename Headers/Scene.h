@@ -39,6 +39,7 @@ private:
     Model* bushModel;
     Model* sphereModel;
     Model* giftModel;
+    Model* rectangleModel;
 
     // Shaders
     ShaderProgram* constantShader;

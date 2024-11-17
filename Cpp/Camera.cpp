@@ -13,7 +13,7 @@ Camera::Camera(const glm::vec3 &position)
       lastX(400),
       lastY(300),
       firstMouse(true),
-      movementSpeed(2.5f),
+      movementSpeed(5.5f),
       mouseSensitivity(0.1f),
       zoom(45.0f),
       aspectRatio(800.0f / 600.0f)
@@ -46,7 +46,8 @@ void Camera::processMouseMovement(double xpos, double ypos)
     }
 
     float xoffset = static_cast<float>(xpos) - lastX;
-    float yoffset = lastY - static_cast<float>(ypos);
+    float yoffset = lastY - static_cast<float>(ypos); // Reversed since y-coordinates range from bottom to top
+
     lastX = static_cast<float>(xpos);
     lastY = static_cast<float>(ypos);
 
@@ -56,6 +57,7 @@ void Camera::processMouseMovement(double xpos, double ypos)
     yaw += xoffset;
     pitch += yoffset;
 
+    // Constrain the pitch angle to prevent screen flipping
     if (pitch > 89.0f)
         pitch = 89.0f;
     if (pitch < -89.0f)
@@ -114,4 +116,9 @@ glm::mat4 Camera::getViewMatrix() const
 glm::mat4 Camera::getProjectionMatrix() const
 {
     return glm::perspective(glm::radians(zoom), aspectRatio, 0.1f, 100.0f);
+}
+
+void Camera::setFirstMouse(bool value)
+{
+    firstMouse = value;
 }

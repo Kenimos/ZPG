@@ -7,6 +7,7 @@ Light::Light(LightType type, const glm::vec3& positionOrDirection, const glm::ve
 {
 }
 
+
 Light::~Light()
 {
 }
@@ -37,9 +38,9 @@ glm::vec3 Light::getDirection() const {
     return direction;
 }
 
-void Light::setCutOffs(float innerCutOff, float outerCutOff) {
-    this->innerCutOff = innerCutOff;
-    this->outerCutOff = outerCutOff;
+void Light::setCutOffs(float innerCutOffDegrees, float outerCutOffDegrees) {
+    this->innerCutOff = glm::cos(glm::radians(innerCutOffDegrees));
+    this->outerCutOff = glm::cos(glm::radians(outerCutOffDegrees));
     notifyObservers();
 }
 

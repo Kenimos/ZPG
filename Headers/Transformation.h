@@ -1,4 +1,3 @@
-// Transformation.h
 #pragma once
 
 #include <vector>
@@ -6,20 +5,28 @@
 #include <glm/glm.hpp>
 #include "TransformationComponent.h"
 
-class Transformation {
+class Transformation
+{
 public:
     Transformation();
-    ~Transformation();
+    void addComponent(std::shared_ptr<TransformationComponent> component);
+    glm::mat4 getModelMatrix() const;
+    void update(float deltaTime);
 
-    glm::mat4 getModelMatrix();
-
-    void addTransformation(std::unique_ptr<TransformationComponent> component);
-    void clearTransformations();
-
-    void translate(const glm::vec3& translation);
-    void rotate(float angleDegrees, const glm::vec3& axis);
-    void scale(const glm::vec3& scalingFactors);
+    template <typename T>
+    std::shared_ptr<T> getComponent() const
+    {
+        for (const auto& component : components)
+        {
+            auto castedComponent = std::dynamic_pointer_cast<T>(component);
+            if (castedComponent)
+            {
+                return castedComponent;
+            }
+        }
+        return nullptr;
+    }
 
 private:
-    std::vector<std::unique_ptr<TransformationComponent>> components;
+    std::vector<std::shared_ptr<TransformationComponent>> components;
 };

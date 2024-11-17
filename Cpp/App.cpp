@@ -143,15 +143,22 @@ void App::processInput()
         glfwSetWindowShouldClose(window, true);
     }
 
-    if (glfwGetKey(window, GLFW_KEY_LEFT_CONTROL) == GLFW_PRESS)
+    if (glfwGetKey(window, GLFW_KEY_LEFT_CONTROL) == GLFW_PRESS || glfwGetKey(window, GLFW_MOUSE_BUTTON_RIGHT) == GLFW_PRESS)
     {
-        cameraControlActive = true;
-        glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+        if (!cameraControlActive)
+        {
+            cameraControlActive = true;
+            glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+            camera.setFirstMouse(true); 
+        }
     }
     else
     {
-        cameraControlActive = false;
-        glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+        if (cameraControlActive)
+        {
+            cameraControlActive = false;
+            glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+        }
     }
 
     float currentFrame = glfwGetTime();
@@ -239,7 +246,7 @@ void App::framebufferSizeCallback(GLFWwindow *window, int width, int height)
 void App::mouseCallback(GLFWwindow *window, double xpos, double ypos)
 {
     App *app = static_cast<App *>(glfwGetWindowUserPointer(window));
-    if(app->cameraControlActive)
+    if (app->cameraControlActive)
     {
         app->camera.processMouseMovement(xpos, ypos);
     }

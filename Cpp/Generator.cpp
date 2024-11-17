@@ -27,7 +27,7 @@ int Generator::getRandomInt(int min, int max)
 glm::vec3 Generator::getRandomVec3(float min, float max, bool yZero)
 {
     float x = getRandomFloat(min, max);
-    float y = yZero ? 0.0f : getRandomFloat(min, max);
+    float y = yZero ? 2.0f : getRandomFloat(min, max);
     float z = getRandomFloat(min, max);
     return glm::vec3(x, y, z);
 }

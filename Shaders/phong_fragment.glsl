@@ -1,4 +1,3 @@
-// phong_fragment.glsl
 #version 330 core
 
 in vec3 fragPosition;
@@ -16,12 +15,17 @@ struct Light {
     float outerCutOff;
 };
 
+// Material properties
+uniform vec3 materialColor;
+uniform float materialShininess;
+uniform float ambientStrength;
+uniform float specularStrength; // Added missing semicolon
+
 #define MAX_LIGHTS 10
 uniform int numLights;
 uniform Light lights[MAX_LIGHTS];
 
 uniform vec3 viewPos;
-uniform vec3 materialColor;
 
 void main()
 {
@@ -31,10 +35,6 @@ void main()
     vec3 ambient = vec3(0.0);
     vec3 diffuse = vec3(0.0);
     vec3 specular = vec3(0.0);
-
-    float ambientStrength = 0.1;
-    float specularStrength = 0.5;
-    float materialShininess = 32.0;
 
     for (int i = 0; i < numLights; ++i)
     {

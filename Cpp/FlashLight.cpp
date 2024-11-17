@@ -38,8 +38,5 @@ void FlashLight::toggleIntensity()
 
 void FlashLight::setCutOffs(float innerCutOffDegrees, float outerCutOffDegrees)
 {
-    float innerCutOff = glm::cos(glm::radians(innerCutOffDegrees));
-    float outerCutOff = glm::cos(glm::radians(outerCutOffDegrees));
-    // Use Light's public setter method
-    Light::setCutOffs(innerCutOff, outerCutOff);
+    Light::setCutOffs(innerCutOffDegrees, outerCutOffDegrees);
 }
