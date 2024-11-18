@@ -9,10 +9,9 @@
 #include <iostream>
 #include "ShaderLoader.h"
 #include "Transformation.h"
-#include "Translation.h"
-#include "Rotation.h"
-#include "Scaling.h"
-#include <glm/gtc/random.hpp>
+#include "Translation.h" 
+#include "Rotation.h"    
+#include "Scaling.h"     
 
 Scene::Scene(Camera *camera)
     : camera(camera),
@@ -129,6 +128,7 @@ void Scene::loadModelsScene1()
         sphereModel->loadFromData(sphereData);
     }
 
+    
     std::vector<float> treeData(tree, tree + sizeof(tree) / sizeof(float));
     treeModel = new Model();
     treeModel->loadFromData(treeData);
@@ -137,8 +137,9 @@ void Scene::loadModelsScene1()
     bushModel = new Model();
     bushModel->loadFromData(bushData);
 
+    
     float rectangleVertices[] = {
-
+        
         -50.0f, 0.0f, -50.0f, 0.0f, 1.0f, 0.0f,
         50.0f, 0.0f, -50.0f, 0.0f, 1.0f, 0.0f,
         50.0f, 0.0f, 50.0f, 0.0f, 1.0f, 0.0f,
@@ -154,8 +155,9 @@ void Scene::loadModelsScene1()
     rectangleModel = new Model();
     rectangleModel->loadFromData(rectangleData);
 
+    
     DrawableObject *groundPlane = new DrawableObject(rectangleModel, phongShader);
-    groundPlane->setColor(glm::vec3(0.5f, 0.5f, 0.5f));
+    groundPlane->setColor(glm::vec3(0.5f, 0.5f, 0.5f)); 
     drawableObjects.push_back(groundPlane);
 
     for (int i = 0; i < 50; ++i)
@@ -167,6 +169,7 @@ void Scene::loadModelsScene1()
         float rotationAngle = generator.getRandomFloat(0.0f, 360.0f);
         float scaleValue = generator.getRandomFloat(0.5f, 2.0f);
 
+        
         auto translation = std::make_shared<Translation>(glm::vec3(posX, 0.0f, posZ));
         auto rotation = std::make_shared<Rotation>(rotationAngle, glm::vec3(0.0f, 1.0f, 0.0f));
         auto scaling = std::make_shared<Scaling>(glm::vec3(scaleValue));
@@ -175,6 +178,7 @@ void Scene::loadModelsScene1()
         treeObject->getTransformation().addComponent(rotation);
         treeObject->getTransformation().addComponent(translation);
 
+        
         int randomChoice = generator.getRandomInt(0, 2);
         if (randomChoice == 0)
         {
@@ -203,6 +207,7 @@ void Scene::loadModelsScene1()
         float rotationAngle = generator.getRandomFloat(0.0f, 360.0f);
         float scaleValue = generator.getRandomFloat(0.5f, 2.0f);
 
+        
         auto translation = std::make_shared<Translation>(glm::vec3(posX, 0.0f, posZ));
         auto rotation = std::make_shared<Rotation>(rotationAngle, glm::vec3(0.0f, 1.0f, 0.0f));
         auto scaling = std::make_shared<Scaling>(glm::vec3(scaleValue));
@@ -236,9 +241,11 @@ void Scene::loadModelsScene1()
 
         DrawableObject *lightSphere = new DrawableObject(sphereModel, constantShader);
 
+        
         auto dynamicTranslation = std::make_shared<DynamicTranslation>(randomPosition, randomVelocity);
         lightSphere->getTransformation().addComponent(dynamicTranslation);
 
+        
         auto scaling = std::make_shared<Scaling>(glm::vec3(0.2f));
         lightSphere->getTransformation().addComponent(scaling);
 
@@ -247,7 +254,7 @@ void Scene::loadModelsScene1()
         drawableObjects.push_back(lightSphere);
         lightSphereIndices.push_back(drawableObjects.size() - 1);
     }
-
+    
     Light *spotLight = new Light(SPOTLIGHT, glm::vec3(0.0f, 3.0f, 0.0f), glm::vec3(1.0f, 0.0f, 0.0f), 500.0f);
     spotLight->setDirection(glm::vec3(-1.0f, 0.0f, 0.0f));
     spotLight->setCutOffs(10.5f, 17.5f);
@@ -270,7 +277,7 @@ void Scene::loadModelsScene2()
     drawableObjects.clear();
     lights.clear();
     lightSphereIndices.clear();
-
+    
     if (!sphereModel)
     {
         std::vector<float> sphereData(sphere, sphere + sizeof(sphere) / sizeof(float));
@@ -320,6 +327,7 @@ void Scene::loadModelsScene2()
 
     drawableObjects.push_back(lambertSphere);
 
+    
     DrawableObject *constantSphere = new DrawableObject(sphereModel, phongShader);
     constantSphere->setColor(glm::vec3(0.9f, 0.9f, 1.0f));
 
@@ -334,6 +342,7 @@ void Scene::loadModelsScene2()
 
     drawableObjects.push_back(constantSphere);
 
+    
     Light *pointLight1 = new Light(POINT_LIGHT, glm::vec3(0.0f, 3.0f, 0.0f), glm::vec3(1.0f, 1.0f, 0.0f), 10.0f);
     lights.push_back(pointLight1);
 
@@ -341,7 +350,7 @@ void Scene::loadModelsScene2()
     lights.push_back(pointLight2);
 
     lightSphereIndices.push_back(drawableObjects.size() - 1);
-
+    
     flashLight = new FlashLight(camera, glm::vec3(1.0f), 1.0f, 12.5f, 17.5f);
     lights.push_back(flashLight);
 
@@ -353,11 +362,10 @@ void Scene::loadModelsScene2()
 
 void Scene::loadModelsScene3()
 {
-    camera->setPosition(glm::vec3(0.0f, 50.0f, 0.0f));
     drawableObjects.clear();
     lights.clear();
     lightSphereIndices.clear();
-
+    
     if (!sphereModel)
     {
         std::vector<float> sphereData(sphere, sphere + sizeof(sphere) / sizeof(float));
@@ -365,91 +373,43 @@ void Scene::loadModelsScene3()
         sphereModel->loadFromData(sphereData);
     }
 
-    DrawableObject *sun = new DrawableObject(sphereModel, constantShader);
-    sun->setColor(glm::vec3(1.0f, 1.0f, 0.0f));
-
-    float sunScale = 3.0f;
-    auto sunScaling = std::make_shared<Scaling>(glm::vec3(sunScale));
-    sun->getTransformation().addComponent(sunScaling);
-
-    drawableObjects.push_back(sun);
-
-    Light *sunLight = new Light(POINT_LIGHT, glm::vec3(0.0f), glm::vec3(1.0f, 1.0f, 0.9f), 3.0f);
-    lights.push_back(sunLight);
-
-    const int numPlanets = 8;
-    float planetSizes[numPlanets] = {0.383f, 0.949f, 1.0f, 0.832f, 1.809f, 1.449f, 1.407f, 1.383f};
-    float orbitRadii[numPlanets] = {5.0f, 7.0f, 10.0f, 15.0f, 20.0f, 25.0f, 30.0f, 35.0f};
     
-    for (int i = 0; i < 8; i++)
+    DrawableObject *centralSphere = new DrawableObject(sphereModel, phongShader);
+    centralSphere->setColor(glm::vec3(1.0f, 1.0f, 1.0f));
+
+    auto centralScaling = std::make_shared<Scaling>(glm::vec3(2.0f));
+    centralSphere->getTransformation().addComponent(centralScaling);
+
+    drawableObjects.push_back(centralSphere);
+
+    int numSpheres = 8;
+    float radius = 10.0f;
+
+    for (int i = 0; i < numSpheres; ++i)
     {
-        orbitRadii[i] *= 1.0f;
+        DrawableObject *orbitingSphere = new DrawableObject(sphereModel, phongShader);
+        orbitingSphere->setColor(glm::vec3(generator.getRandomFloat(0.5f, 1.0f),
+                                           generator.getRandomFloat(0.5f, 1.0f),
+                                           generator.getRandomFloat(0.5f, 1.0f)));
+
+        float angle = (360.0f / numSpheres) * i;
+        auto rotation = std::make_shared<Rotation>(angle, glm::vec3(0.0f, 1.0f, 0.0f));
+        auto dynamicRotation = std::make_shared<DynamicRotation>(0.0f, glm::vec3(0.0f, 1.0f, 0.0f), 20.0f);
+
+        auto translation = std::make_shared<Translation>(glm::vec3(radius, 0.0f, 0.0f));
+
+        orbitingSphere->getTransformation().addComponent(dynamicRotation);
+        orbitingSphere->getTransformation().addComponent(rotation);
+        orbitingSphere->getTransformation().addComponent(translation);
+
+        drawableObjects.push_back(orbitingSphere);
     }
 
-    float orbitalSpeeds[numPlanets] = {40.87f, 40.02f, 50.78f, 38.13f, 42.07f, 45.69f, 36.81f, 45.43f};
-    glm::vec3 planetColors[numPlanets] = {
-        glm::vec3(0.5f, 0.5f, 0.5f),
-        glm::vec3(1.0f, 0.8f, 0.6f),
-        glm::vec3(0.2f, 0.6f, 1.0f),
-        glm::vec3(1.0f, 0.5f, 0.5f),
-        glm::vec3(1.0f, 0.9f, 0.6f),
-        glm::vec3(0.9f, 0.8f, 0.5f),
-        glm::vec3(0.5f, 0.8f, 1.0f),
-        glm::vec3(0.3f, 0.5f, 0.8f)
-    };
+    
+    Light *centralLight = new Light(POINT_LIGHT, glm::vec3(0.0f), glm::vec3(1.0f), 50.0f);
+    lights.push_back(centralLight);
 
-    for (int i = 0; i < numPlanets; ++i)
-    {
-        DrawableObject *planet = new DrawableObject(sphereModel, phongShader);
-        planet->setColor(planetColors[i]);
-
-        float planetScale = planetSizes[i];
-        auto scaling = std::make_shared<Scaling>(glm::vec3(planetScale));
-        
-
-        float startAngle = glm::linearRand(0.0f, 360.0f);
-        float angularVelocity = orbitalSpeeds[i] * 0.05f;
-        auto dynamicRotation = std::make_shared<DynamicRotation>(startAngle, glm::vec3(0.0f, 1.0f, 0.0f), angularVelocity);
-        planet->getTransformation().addComponent(dynamicRotation);
-
-        auto translation = std::make_shared<Translation>(glm::vec3(orbitRadii[i], 0.0f, 0.0f));
-        planet->getTransformation().addComponent(translation);
-        planet->getTransformation().addComponent(scaling);
-
-        if (i == 2)
-        {
-            float earthRotationSpeed = 50.0f;
-            auto earthRotation = std::make_shared<DynamicRotation>(0.0f, glm::vec3(0.0f, 1.0f, 0.0f), earthRotationSpeed);
-            planet->getTransformation().addComponent(earthRotation);
-        }
-
-        drawableObjects.push_back(planet);
-
-        if (i == 2)
-        {
-            DrawableObject *moon = new DrawableObject(sphereModel, phongShader);
-            moon->setColor(glm::vec3(0.8f, 0.8f, 0.8f));
-
-            float moonScale = 0.5f;
-            auto moonScaling = std::make_shared<Scaling>(glm::vec3(moonScale));
-
-            float moonAngularVelocity = 50.0f;
-            auto moonDynamicRotation = std::make_shared<DynamicRotation>(0.0f, glm::vec3(0.0f, 1.0f, 0.0f), moonAngularVelocity);
-
-            float moonOrbitRadius = 5.0f;
-            auto moonTranslation = std::make_shared<Translation>(glm::vec3(moonOrbitRadius, 0.0f, 0.0f));
-            auto translation = std::make_shared<Translation>(glm::vec3(orbitRadii[i] * 2, 0.0f, 0.0f));
-
-            moon->getTransformation().addComponent(moonScaling);
-            moon->getTransformation().addComponent(dynamicRotation);
-            moon->getTransformation().addComponent(translation);
-            moon->getTransformation().addComponent(moonDynamicRotation);
-            moon->getTransformation().addComponent(moonTranslation);
-
-            drawableObjects.push_back(moon);
-        }
-    }
-
+    
     flashLight = new FlashLight(camera, glm::vec3(1.0f), 70.0f, 4.5f, 8.5f);
     lights.push_back(flashLight);
 
@@ -487,6 +447,7 @@ void Scene::loadModelsScene4()
             glm::vec3 position = glm::vec3(x * spacing, 0.0f, z * spacing);
             auto translation = std::make_shared<Translation>(position);
 
+            
             float scaleSpeed = generator.getRandomFloat(0.5f, 1.5f);
             auto dynamicScaling = std::make_shared<DynamicScaling>(glm::vec3(1.0f), scaleSpeed);
             sphereObject->getTransformation().addComponent(dynamicScaling);
@@ -528,7 +489,7 @@ void Scene::update(float deltaTime)
     {
         size_t sphereIndex = lightSphereIndices[i];
         DrawableObject *lightSphere = drawableObjects[sphereIndex];
-
+        
         auto dynamicTranslation = lightSphere->getTransformation().getComponent<DynamicTranslation>();
 
         if (dynamicTranslation)
@@ -586,6 +547,7 @@ void Scene::update(float deltaTime)
                 dynamicTranslation->setVelocity(velocity);
             }
 
+            
             lights[i]->setPositionOrDirection(pos);
         }
     }

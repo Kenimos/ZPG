@@ -19,13 +19,18 @@ struct Light {
 uniform vec3 materialColor;
 uniform float materialShininess;
 uniform float ambientStrength;
-uniform float specularStrength; // Added missing semicolon
+uniform float specularStrength;
 
 #define MAX_LIGHTS 10
 uniform int numLights;
 uniform Light lights[MAX_LIGHTS];
 
 uniform vec3 viewPos;
+
+// Attenuation factors
+const float constant = 1.0;
+const float linear = 0.045;
+const float quadratic = 0.0075;
 
 void main()
 {
@@ -47,7 +52,7 @@ void main()
         {
             lightDir = normalize(light.position - fragPosition);
             float distance = length(light.position - fragPosition);
-            attenuation = 1.0 / (distance * distance);
+            attenuation = 1.0 / (constant + linear * distance + quadratic * distance * distance);
         }
         else if (light.type == 1) // Directional light
         {
@@ -60,11 +65,9 @@ void main()
             float epsilon = light.innerCutOff - light.outerCutOff;
             float intensitySpot = clamp((theta - light.outerCutOff) / epsilon, 0.0, 1.0);
 
-            attenuation = intensitySpot;
-
-            // Optional: Add distance attenuation for spotlight
             float distance = length(light.position - fragPosition);
-            attenuation *= 1.0 / (distance * distance);
+            float spotAttenuation = 1.0 / (constant + linear * distance + quadratic * distance * distance);
+            attenuation = intensitySpot * spotAttenuation;
         }
 
         // Ambient component
