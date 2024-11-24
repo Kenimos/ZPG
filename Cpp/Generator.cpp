@@ -1,15 +1,15 @@
 #include "Generator.h"
-#include <iostream> // For debugging purposes
+#include <iostream>
 
 Generator::Generator()
-    : engine(std::random_device{}()) // Initialize engine directly
+    : engine(std::random_device{}())
 {
-    std::cout << "Generator constructed." << std::endl; // Debugging statement
+    std::cout << "Generator constructed." << std::endl;
 }
 
 Generator::~Generator()
 {
-    std::cout << "Generator destructed." << std::endl; // Debugging statement
+    std::cout << "Generator destructed." << std::endl;
 }
 
 float Generator::getRandomFloat(float min, float max)

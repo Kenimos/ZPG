@@ -1,4 +1,3 @@
-//Subject.cpp
 #include "Subject.h"
 #include <algorithm>
 #include <iostream>

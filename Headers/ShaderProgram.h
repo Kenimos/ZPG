@@ -20,7 +20,6 @@ public:
     void use();
     void setMat4(const std::string &name, const glm::mat4 &mat);
     void setVec3(const std::string &name, const glm::vec3 &vec);
-    // void setFloat(const std::string &name, float value);
     void setFloat(const std::string& name, float value) const;
     void setInt(const std::string &name, int value);
     void setAmbientStrength(float strength);
@@ -31,12 +30,12 @@ public:
     void setProgramID(GLuint programID);
 
     void setLights(const std::vector<Light *> &lights);
+    void setBool(const std::string &name, bool value);
 
 private:
     GLuint programID;
     std::unordered_map<std::string, GLint> uniformLocations;
 
-    // Camera and light properties
     glm::mat4 viewMatrix;
     glm::mat4 projectionMatrix;
     glm::vec3 cameraPosition;
@@ -47,4 +46,4 @@ private:
     int getLightIndex(Light *light);
 };
 
-#endif // SHADERPROGRAM_H
+#endif

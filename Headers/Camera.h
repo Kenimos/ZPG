@@ -47,4 +47,4 @@ private:
     void notifyProjectionMatrixChanged();
 };
 
-#endif // CAMERA_H
+#endif

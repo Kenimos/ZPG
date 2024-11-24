@@ -3,9 +3,8 @@
 #include <iostream>
 
 DrawableObject::DrawableObject(Model* model, ShaderProgram* shaderProgram)
-    : model(model), shaderProgram(shaderProgram), color(glm::vec3(1.0f))
+    : model(model), shaderProgram(shaderProgram), color(glm::vec3(1.0f)), texture(nullptr)
 {
-    // Initialize default material properties
     material.ambientStrength = 0.1f;
     material.specularStrength = 0.5f;
     material.shininess = 32.0f;
@@ -48,10 +47,8 @@ void DrawableObject::draw()
         return;
     }
 
-    // Use the shader program
     shaderProgram->use();
 
-    // Set uniforms
     glm::mat4 modelMatrix = transformation.getModelMatrix();
     shaderProgram->setMat4("modelMatrix", modelMatrix);
     shaderProgram->setVec3("materialColor", color);
@@ -59,10 +56,21 @@ void DrawableObject::draw()
     shaderProgram->setFloat("ambientStrength", material.ambientStrength);
     shaderProgram->setFloat("specularStrength", material.specularStrength);
 
-    // Now draw the model
-    model->draw();
+    if (texture)
+    {
+        shaderProgram->setBool("useTexture", true);
+        texture->bind(GL_TEXTURE0);
+        shaderProgram->setInt("texture1", 0);
+    }
+    else
+    {
+        shaderProgram->setBool("useTexture", false);
+    }
 
-    // Reset the shader program
+
+    model->draw();
+    glBindTexture(GL_TEXTURE_2D, 0);
+
     glUseProgram(0);
 }
 
@@ -72,7 +80,6 @@ glm::vec3 DrawableObject::getPosition() const
     return glm::vec3(modelMatrix[3]);
 }
 
-// Implement the setMaterial and getMaterial methods
 void DrawableObject::setMaterial(const Material& material)
 {
     this->material = material;
@@ -81,4 +88,9 @@ void DrawableObject::setMaterial(const Material& material)
 const Material& DrawableObject::getMaterial() const
 {
     return material;
+}
+
+void DrawableObject::setTexture(Texture* texture)
+{
+    this->texture = texture;
 }

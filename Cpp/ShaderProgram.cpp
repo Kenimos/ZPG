@@ -26,8 +26,15 @@ void ShaderProgram::retrieveUniformLocations()
         "viewPos",
         "numLights",
         "ambientStrength",
-        "specularStrength", // Added this line
-        "materialShininess"};
+        "specularStrength",
+        "materialShininess",
+        "skybox",
+        "view",          
+        "projection",
+        "useTexture",
+        "texture1",
+        "model"
+    };
 
     for (const auto &name : uniforms)
     {
@@ -64,9 +71,6 @@ void ShaderProgram::use()
 
     setVec3("viewPos", cameraPosition);
 
-    // Remove these lines since material properties are now set per object
-    // setFloat("ambientStrength", 0.1f);
-    // setFloat("materialShininess", 32.0f);
 }
 
 void ShaderProgram::setMat4(const std::string &name, const glm::mat4 &mat)
@@ -229,5 +233,14 @@ void ShaderProgram::setLights(const std::vector<Light *> &lights)
 
         setVec3(baseName + "color", lights[i]->getColor());
         setFloat(baseName + "intensity", lights[i]->getIntensity());
+    }
+}
+
+void ShaderProgram::setBool(const std::string &name, bool value)
+{
+    auto it = uniformLocations.find(name);
+    if (it != uniformLocations.end() && it->second != -1)
+    {
+        glUniform1i(it->second, (int)value);
     }
 }

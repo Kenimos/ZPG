@@ -1,7 +1,5 @@
-// Scene.h
 #pragma once
 
-// No OpenGL headers included here
 
 
 #include "Camera.h"
@@ -12,6 +10,7 @@
 #include "FlashLight.h"
 #include <vector>
 #include "Generator.h"
+#include "SkyBox.h"
 
 class Scene {
 public:
@@ -31,40 +30,41 @@ public:
 
     void toggleFlashLightIntensity();
 
+    void initSkybox();
+    void drawSkybox();
+    void toggleSkyboxFollowing();
+
+
 private:
     Camera* camera;
 
-    // Models
     Model* treeModel;
     Model* bushModel;
     Model* sphereModel;
     Model* giftModel;
     Model* rectangleModel;
 
-    // Shaders
     ShaderProgram* constantShader;
     ShaderProgram* lambertShader;
     ShaderProgram* phongShader;
     ShaderProgram* blinnPhongShader;
     ShaderProgram* spotlightShader;
+    ShaderProgram* groundShader;
 
     std::vector<ShaderProgram*> shaders;
     int currentShaderIndex;
 
-    // Drawable Objects
     std::vector<DrawableObject*> drawableObjects;
 
-    // Lights
     std::vector<Light*> lights;
     FlashLight* flashLight;
 
-    // For Scene 3: Indices of light spheres in drawableObjects
     std::vector<size_t> lightSphereIndices;
 
-    // Random generator
     Generator generator;
+    SkyBox* skybox;
+    bool skyboxFollowsCamera; 
 
-    // Helper Methods
     void loadModelsScene1();
     void loadModelsScene2();
     void loadModelsScene3();

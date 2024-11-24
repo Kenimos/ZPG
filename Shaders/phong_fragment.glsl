@@ -1,9 +1,14 @@
+// phong_fragment.glsl
 #version 330 core
 
 in vec3 fragPosition;
 in vec3 fragNormal;
+in vec2 texCoords;
 
 out vec4 outColor;
+
+uniform sampler2D texture1;
+uniform bool useTexture;
 
 struct Light {
     int type; // 0: Point light, 1: Directional light, 2: Spotlight
@@ -86,6 +91,17 @@ void main()
         specular += specularComponent;
     }
 
-    vec3 result = (ambient + diffuse + specular) * materialColor;
+    vec3 result = (ambient + diffuse + specular);
+
+    if (useTexture)
+    {
+        vec4 textureColor = texture(texture1, texCoords);
+        result *= textureColor.rgb;
+    }
+    else
+    {
+        result *= materialColor;
+    }
+
     outColor = vec4(result, 1.0);
 }

@@ -13,12 +13,13 @@
 #include "Rotation.h"
 #include "Scaling.h"
 #include <glm/gtc/random.hpp>
+#include <glm/ext/matrix_transform.hpp>
 
 Scene::Scene(Camera *camera)
     : camera(camera),
       treeModel(nullptr), bushModel(nullptr), sphereModel(nullptr), giftModel(nullptr), rectangleModel(nullptr),
       constantShader(nullptr), lambertShader(nullptr), phongShader(nullptr), blinnPhongShader(nullptr),
-      spotlightShader(nullptr), currentShaderIndex(0), flashLight(nullptr)
+      spotlightShader(nullptr), currentShaderIndex(0), flashLight(nullptr), skybox(nullptr), skyboxFollowsCamera(true)
 {
 }
 
@@ -83,6 +84,15 @@ void Scene::initShaders()
         camera->attach(shader);
     }
     camera->notifyObservers();
+
+    std::vector<std::string> faces{
+        "/Users/jan/Desktop/ZPG/Textures/posx.jpg",
+        "/Users/jan/Desktop/ZPG/Textures/negx.jpg",
+        "/Users/jan/Desktop/ZPG/Textures/posy.jpg",
+        "/Users/jan/Desktop/ZPG/Textures/negy.jpg",
+        "/Users/jan/Desktop/ZPG/Textures/posz.jpg",
+        "/Users/jan/Desktop/ZPG/Textures/negz.jpg"};
+    skybox = new SkyBox(faces);
 }
 
 void Scene::switchShaders()
@@ -138,24 +148,25 @@ void Scene::loadModelsScene1()
     bushModel->loadFromData(bushData);
 
     float rectangleVertices[] = {
+        -150.0f, 0.0f, -150.0f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f,
+        150.0f, 0.0f, -150.0f, 0.0f, 1.0f, 0.0f, 10.0f, 0.0f,
+        150.0f, 0.0f, 150.0f, 0.0f, 1.0f, 0.0f, 10.0f, 10.0f,
 
-        -50.0f, 0.0f, -50.0f, 0.0f, 1.0f, 0.0f,
-        50.0f, 0.0f, -50.0f, 0.0f, 1.0f, 0.0f,
-        50.0f, 0.0f, 50.0f, 0.0f, 1.0f, 0.0f,
-
-        50.0f, 0.0f, 50.0f, 0.0f, 1.0f, 0.0f,
-        -50.0f, 0.0f, 50.0f, 0.0f, 1.0f, 0.0f,
-        -50.0f, 0.0f, -50.0f, 0.0f, 1.0f, 0.0f};
+        150.0f, 0.0f, 150.0f, 0.0f, 1.0f, 0.0f, 10.0f, 10.0f,
+        -150.0f, 0.0f, 150.0f, 0.0f, 1.0f, 0.0f, 0.0f, 10.0f,
+        -150.0f, 0.0f, -150.0f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f};
 
     std::vector<float> rectangleData(
         rectangleVertices,
         rectangleVertices + sizeof(rectangleVertices) / sizeof(float));
 
     rectangleModel = new Model();
-    rectangleModel->loadFromData(rectangleData);
+    rectangleModel->loadFromData(rectangleData, true);
+    Texture *grassTexture = new Texture("textures/grass.png");
 
     DrawableObject *groundPlane = new DrawableObject(rectangleModel, phongShader);
-    groundPlane->setColor(glm::vec3(0.5f, 0.5f, 0.5f));
+    groundPlane->setColor(glm::vec3(1.0f));
+    groundPlane->setTexture(grassTexture);
     drawableObjects.push_back(groundPlane);
 
     for (int i = 0; i < 50; ++i)
@@ -190,7 +201,7 @@ void Scene::loadModelsScene1()
             treeObject->getTransformation().addComponent(dynamicTranslation);
         }
 
-        treeObject->setColor(glm::vec3(1.0f, 1.0f, 1.0f));
+        treeObject->setColor(glm::vec3(0.1f, 1.0f, 0.1f));
         drawableObjects.push_back(treeObject);
     }
 
@@ -211,7 +222,7 @@ void Scene::loadModelsScene1()
         bushObject->getTransformation().addComponent(rotation);
         bushObject->getTransformation().addComponent(translation);
 
-        bushObject->setColor(glm::vec3(1.0f, 1.0f, 1.0f));
+        bushObject->setColor(glm::vec3(0.3f, 1.0f, 1.1f));
         drawableObjects.push_back(bushObject);
     }
 
@@ -231,7 +242,7 @@ void Scene::loadModelsScene1()
         glm::vec3 randomPosition = generator.getRandomVec3(-4.0f, 4.0f, true);
         glm::vec3 randomVelocity = generator.getRandomVec3(1.0f, 10.0f, true);
 
-        Light *light = new Light(POINT_LIGHT, randomPosition, lightColors[i], 15.0f);
+        Light *light = new Light(POINT_LIGHT, randomPosition, lightColors[i], 1.0f);
         lights.push_back(light);
 
         DrawableObject *lightSphere = new DrawableObject(sphereModel, constantShader);
@@ -248,12 +259,12 @@ void Scene::loadModelsScene1()
         lightSphereIndices.push_back(drawableObjects.size() - 1);
     }
 
-    Light *spotLight = new Light(SPOTLIGHT, glm::vec3(0.0f, 3.0f, 0.0f), glm::vec3(1.0f, 0.0f, 0.0f), 500.0f);
+    Light *spotLight = new Light(SPOTLIGHT, glm::vec3(0.0f, 3.0f, 0.0f), glm::vec3(1.0f, 0.0f, 0.0f), 10.0f);
     spotLight->setDirection(glm::vec3(-1.0f, 0.0f, 0.0f));
     spotLight->setCutOffs(10.5f, 17.5f);
     lights.push_back(spotLight);
 
-    Light *pointLight = new Light(POINT_LIGHT, glm::vec3(5.0f, 50.0f, 5.0f), glm::vec3(1.0f, 1.0f, 1.0f), 300.0f);
+    Light *pointLight = new Light(POINT_LIGHT, glm::vec3(5.0f, 50.0f, 5.0f), glm::vec3(1.0f, 1.0f, 1.0f), 10.0f);
     lights.push_back(pointLight);
 
     flashLight = new FlashLight(camera, glm::vec3(1.0f), 100.0f, 7.5f, 14.5f);
@@ -380,7 +391,7 @@ void Scene::loadModelsScene3()
     const int numPlanets = 8;
     float planetSizes[numPlanets] = {0.383f, 0.949f, 1.0f, 0.832f, 1.809f, 1.449f, 1.407f, 1.383f};
     float orbitRadii[numPlanets] = {5.0f, 7.0f, 10.0f, 15.0f, 20.0f, 25.0f, 30.0f, 35.0f};
-    
+
     for (int i = 0; i < 8; i++)
     {
         orbitRadii[i] *= 1.0f;
@@ -395,8 +406,7 @@ void Scene::loadModelsScene3()
         glm::vec3(1.0f, 0.9f, 0.6f),
         glm::vec3(0.9f, 0.8f, 0.5f),
         glm::vec3(0.5f, 0.8f, 1.0f),
-        glm::vec3(0.3f, 0.5f, 0.8f)
-    };
+        glm::vec3(0.3f, 0.5f, 0.8f)};
 
     for (int i = 0; i < numPlanets; ++i)
     {
@@ -405,7 +415,6 @@ void Scene::loadModelsScene3()
 
         float planetScale = planetSizes[i];
         auto scaling = std::make_shared<Scaling>(glm::vec3(planetScale));
-        
 
         float startAngle = glm::linearRand(0.0f, 360.0f);
         float angularVelocity = orbitalSpeeds[i] * 0.05f;
@@ -507,6 +516,13 @@ void Scene::loadModelsScene4()
 
 void Scene::draw()
 {
+    if (skybox && skyboxFollowsCamera)
+    {
+        glm::mat4 view = camera->getViewMatrix();
+        glm::mat4 projection = camera->getProjectionMatrix();
+        skybox->draw(view, projection, skyboxFollowsCamera);
+    }
+
     for (auto *shader : shaders)
     {
         shader->setLights(lights);
@@ -515,7 +531,15 @@ void Scene::draw()
     {
         object->draw();
     }
+
+    if (skybox && !skyboxFollowsCamera)
+    {
+        glm::mat4 view = camera->getViewMatrix();
+        glm::mat4 projection = camera->getProjectionMatrix();
+        skybox->draw(view, projection, skyboxFollowsCamera);
+    }
 }
+
 
 void Scene::update(float deltaTime)
 {
@@ -602,5 +626,31 @@ void Scene::toggleFlashLightIntensity()
     if (flashLight)
     {
         flashLight->toggleIntensity();
+    }
+}
+
+void Scene::toggleSkyboxFollowing()
+{
+    skyboxFollowsCamera = !skyboxFollowsCamera;
+
+    if (!skyboxFollowsCamera)
+    {
+        glm::vec3 cameraPos = camera->getPosition();
+        glm::vec3 cameraFront = camera->getFront();
+        glm::vec3 skyboxPosition = cameraPos + cameraFront * 50.0f;
+
+        glm::mat4 modelMatrix = glm::translate(glm::mat4(1.0f), skyboxPosition);
+        modelMatrix = glm::scale(modelMatrix, glm::vec3(50.0f));
+
+        skybox->setModelMatrix(modelMatrix);
+    }
+
+    if (skyboxFollowsCamera)
+    {
+        std::cout << "Skybox will now follow the camera." << std::endl;
+    }
+    else
+    {
+        std::cout << "Skybox is now stationary." << std::endl;
     }
 }

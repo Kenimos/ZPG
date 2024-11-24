@@ -1,4 +1,3 @@
-// Generator.h
 #pragma once
 
 #include <random>
