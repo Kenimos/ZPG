@@ -32,7 +32,7 @@ void FlashLight::toggleIntensity()
     }
     else
     {
-        setIntensity(100.0f);
+        setIntensity(1.0f);
     }
 }
 

@@ -14,7 +14,6 @@ App::App()
       keyStates{},
       cameraControlActive(false)
 {
-
 }
 
 App::~App()
@@ -149,7 +148,7 @@ void App::processInput()
         {
             cameraControlActive = true;
             glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
-            camera.setFirstMouse(true); 
+            camera.setFirstMouse(true);
         }
     }
     else
@@ -223,6 +222,23 @@ void App::processInput()
     else
     {
         fKeyPressed = false;
+    }
+
+    static bool kKeyPressed = false;
+    if (glfwGetKey(window, GLFW_KEY_K) == GLFW_PRESS)
+    {
+        if (!kKeyPressed)
+        {
+            if (currentSceneIndex >= 0 && currentSceneIndex < scenes.size())
+            {
+                scenes[currentSceneIndex]->toggleSkyboxFollowing();
+            }
+            kKeyPressed = true;
+        }
+    }
+    else
+    {
+        kKeyPressed = false;
     }
 }
 

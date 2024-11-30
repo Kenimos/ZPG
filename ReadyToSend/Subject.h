@@ -16,4 +16,4 @@ protected:
     std::vector<Observer*> observers;
 };
 
-#endif // SUBJECT_H
+#endif

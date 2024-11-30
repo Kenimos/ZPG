@@ -139,6 +139,52 @@ void Scene::loadModelsScene1()
         sphereModel->loadFromData(sphereData);
     }
 
+    Model *nickModel = new Model();
+    nickModel->loadModel("Models/jec0014.obj");
+    DrawableObject *nickObject = new DrawableObject(nickModel, phongShader);
+    nickObject->setColor(glm::vec3(0.0f, 0.0f, 1.0f));
+    nickObject->getTransformation().addComponent(std::make_shared<Scaling>(glm::vec3(1.0f)));
+    nickObject->getTransformation().addComponent(std::make_shared<Translation>(glm::vec3(0.0f, 30.0f, 100.0f)));
+    nickObject->getTransformation().addComponent(std::make_shared<Rotation>(180.0f, glm::vec3(0.0f, 0.0f, 1.0f)));
+    nickObject->getTransformation().addComponent(std::make_shared<Rotation>(90.0f, glm::vec3(1.0f, 0.0f, 0.0f)));
+    drawableObjects.push_back(nickObject);
+
+
+    Model *houseModel = new Model();
+    houseModel->loadModel("Models/Cottage_FREE.obj");
+    DrawableObject *houseObject = new DrawableObject(houseModel, phongShader);
+    houseObject->setColor(glm::vec3(0.8f, 0.8f, 0.8f));
+    houseObject->getTransformation().addComponent(std::make_shared<Scaling>(glm::vec3(1.0f)));
+    houseObject->getTransformation().addComponent(std::make_shared<Translation>(glm::vec3(0.0f, 0.0f, 0.0f)));
+    Texture *houseTexture = new Texture("Textures/Cottage_Clean_Base_Color.png");
+    houseObject->setTexture(houseTexture);
+    drawableObjects.push_back(houseObject);
+
+    Model *frogModel = new Model();
+    frogModel->loadModel("Models/frog.obj");
+    Texture *frogTexture = new Texture("Textures/frog.jpg");
+    for (int i = 0; i < 16; i++)
+    {
+        float f = i * 10.0f;
+        DrawableObject *frogObject = new DrawableObject(frogModel, phongShader);
+        frogObject->setColor(glm::vec3(1.0f, 1.0f, 1.0f));
+        frogObject->getTransformation().addComponent(std::make_shared<Scaling>(glm::vec3(0.5f)));
+        
+        if (i > 7)
+        {
+            frogObject->getTransformation().addComponent(std::make_shared<Translation>(glm::vec3(-115.0f + f, 0.0f, -40.0f)));
+            frogObject->getTransformation().addComponent(std::make_shared<Rotation>(270.0f, glm::vec3(1.0f, 0.0f, 0.0f)));
+            frogObject->getTransformation().addComponent(std::make_shared<Rotation>(180.0f, glm::vec3(0.0f, 0.0f, 1.0f)));
+        }
+        else
+        {
+            frogObject->getTransformation().addComponent(std::make_shared<Translation>(glm::vec3(-35.0f + f, 0.0f, 40.0f)));
+            frogObject->getTransformation().addComponent(std::make_shared<Rotation>(270.0f, glm::vec3(1.0f, 0.0f, 0.0f)));
+        }
+        frogObject->setTexture(frogTexture);
+        drawableObjects.push_back(frogObject);
+    }
+
     std::vector<float> treeData(tree, tree + sizeof(tree) / sizeof(float));
     treeModel = new Model();
     treeModel->loadFromData(treeData);
@@ -173,8 +219,8 @@ void Scene::loadModelsScene1()
     {
         DrawableObject *treeObject = new DrawableObject(treeModel, phongShader);
 
-        float posX = generator.getRandomFloat(-50.0f, 50.0f);
-        float posZ = generator.getRandomFloat(-50.0f, 50.0f);
+        float posX = generator.getRandomFloatExcluding(-50.0f, 50.0f, -49.0f, 49.0f);
+        float posZ = generator.getRandomFloatExcluding(-50.0f, 50.0f, -49.0f, 49.0f);
         float rotationAngle = generator.getRandomFloat(0.0f, 360.0f);
         float scaleValue = generator.getRandomFloat(0.5f, 2.0f);
 
@@ -195,10 +241,10 @@ void Scene::loadModelsScene1()
         }
         else if (randomChoice == 1)
         {
-            glm::vec3 velocity = generator.getRandomVec3(-1.0f, 1.0f, true);
-            velocity.y = 0.0f;
-            auto dynamicTranslation = std::make_shared<DynamicTranslation>(glm::vec3(0.0f), velocity);
-            treeObject->getTransformation().addComponent(dynamicTranslation);
+            // glm::vec3 velocity = generator.getRandomVec3(-1.0f, 1.0f, true);
+            // velocity.y = 0.0f;
+            // auto dynamicTranslation = std::make_shared<DynamicTranslation>(glm::vec3(0.0f), velocity);
+            // treeObject->getTransformation().addComponent(dynamicTranslation);
         }
 
         treeObject->setColor(glm::vec3(0.1f, 1.0f, 0.1f));
@@ -209,8 +255,8 @@ void Scene::loadModelsScene1()
     {
         DrawableObject *bushObject = new DrawableObject(bushModel, phongShader);
 
-        float posX = generator.getRandomFloat(-50.0f, 50.0f);
-        float posZ = generator.getRandomFloat(-50.0f, 50.0f);
+        float posX = generator.getRandomFloatExcluding(-50.0f, 50.0f, -49.0f, 49.0f);
+        float posZ = generator.getRandomFloatExcluding(-50.0f, 50.0f, -49.0f, 49.0f);
         float rotationAngle = generator.getRandomFloat(0.0f, 360.0f);
         float scaleValue = generator.getRandomFloat(0.5f, 2.0f);
 
@@ -264,10 +310,10 @@ void Scene::loadModelsScene1()
     spotLight->setCutOffs(10.5f, 17.5f);
     lights.push_back(spotLight);
 
-    Light *pointLight = new Light(POINT_LIGHT, glm::vec3(5.0f, 50.0f, 5.0f), glm::vec3(1.0f, 1.0f, 1.0f), 10.0f);
+    Light *pointLight = new Light(POINT_LIGHT, glm::vec3(5.0f, 500.0f, 5.0f), glm::vec3(1.0f, 1.0f, 1.0f), 600.0f);
     lights.push_back(pointLight);
 
-    flashLight = new FlashLight(camera, glm::vec3(1.0f), 100.0f, 7.5f, 14.5f);
+    flashLight = new FlashLight(camera, glm::vec3(1.0f), 1.0f, 7.5f, 14.5f);
     lights.push_back(flashLight);
 
     for (auto *shader : shaders)
@@ -539,7 +585,6 @@ void Scene::draw()
         skybox->draw(view, projection, skyboxFollowsCamera);
     }
 }
-
 
 void Scene::update(float deltaTime)
 {

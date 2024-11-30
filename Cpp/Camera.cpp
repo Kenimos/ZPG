@@ -13,7 +13,7 @@ Camera::Camera(const glm::vec3 &position)
       lastX(400),
       lastY(300),
       firstMouse(true),
-      movementSpeed(5.5f),
+      movementSpeed(10.5f),
       mouseSensitivity(0.1f),
       zoom(45.0f),
       aspectRatio(800.0f / 600.0f)

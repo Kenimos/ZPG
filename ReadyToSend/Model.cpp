@@ -20,9 +20,9 @@ Model::~Model()
     }
 }
 
-void Model::loadFromData(const std::vector<float> &data)
+void Model::loadFromData(const std::vector<float> &data, bool hasTexCoords)
 {
-    size_t stride = 6;
+    size_t stride = hasTexCoords ? 8 : 6;
     size_t numVertices = data.size() / stride;
 
     std::vector<Vertex> vertices(numVertices);
@@ -36,12 +36,22 @@ void Model::loadFromData(const std::vector<float> &data)
         vertices[i].normal[0] = data[index + 3];
         vertices[i].normal[1] = data[index + 4];
         vertices[i].normal[2] = data[index + 5];
+        if (hasTexCoords)
+        {
+            vertices[i].texCoords[0] = data[index + 6];
+            vertices[i].texCoords[1] = data[index + 7];
+        }
+        else
+        {
+            vertices[i].texCoords[0] = 0.0f;
+            vertices[i].texCoords[1] = 0.0f;
+        }
     }
 
-    setupMesh(vertices);
+    setupMesh(vertices, hasTexCoords);
 }
 
-void Model::setupMesh(const std::vector<Vertex> &vertices)
+void Model::setupMesh(const std::vector<Vertex> &vertices, bool hasTexCoords)
 {
     vertexCount = vertices.size();
 
@@ -59,15 +69,20 @@ void Model::setupMesh(const std::vector<Vertex> &vertices)
     glBindBuffer(GL_ARRAY_BUFFER, VBO);
     glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(Vertex), vertices.data(), GL_STATIC_DRAW);
 
-    
     glEnableVertexAttribArray(0);
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex),
                           (void *)offsetof(Vertex, position));
 
-    
     glEnableVertexAttribArray(1);
     glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex),
                           (void *)offsetof(Vertex, normal));
+
+    if (hasTexCoords)
+    {
+        glEnableVertexAttribArray(2);
+        glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex),
+                              (void *)offsetof(Vertex, texCoords));
+    }
 
     glBindVertexArray(0);
 }

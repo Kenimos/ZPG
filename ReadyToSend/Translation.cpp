@@ -1,4 +1,3 @@
-// Translation.cpp
 #include "Translation.h"
 #include <glm/gtc/matrix_transform.hpp>
 

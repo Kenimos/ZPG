@@ -18,6 +18,35 @@ float Generator::getRandomFloat(float min, float max)
     return dist(engine);
 }
 
+float Generator::getRandomFloatExcluding(float min, float max, float min2, float max2)
+{
+    if (min2 <= min || max2 >= max || min2 > max2)
+    {
+        throw std::invalid_argument("Invalid exclusion range.");
+    }
+
+    float lowerRange = min2 - min;
+    float upperRange = max - max2;
+    float totalRange = lowerRange + upperRange;
+
+    std::uniform_real_distribution<float> dist(0.0f, totalRange);
+    float rand = dist(engine);
+
+    float result;
+    if (rand < lowerRange)
+    {
+        result = min + rand;
+    }
+    else
+    {
+        result = max2 + (rand - lowerRange);
+    }
+
+    // Print the actual generated number
+    printf("%f ", result);
+    return result;
+}
+
 int Generator::getRandomInt(int min, int max)
 {
     std::uniform_int_distribution<int> dist(min, max);

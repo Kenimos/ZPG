@@ -28,7 +28,6 @@ public:
     float getInnerCutOff() const;
     float getOuterCutOff() const;
 
-    // Existing methods
     void setColor(const glm::vec3& color);
     glm::vec3 getColor() const;
 
@@ -53,4 +52,4 @@ private:
     glm::vec3 velocity;
 };
 
-#endif // LIGHT_H
+#endif

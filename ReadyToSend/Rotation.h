@@ -1,4 +1,3 @@
-// Rotation.h
 #pragma once
 
 #include "TransformationComponent.h"

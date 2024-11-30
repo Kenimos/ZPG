@@ -1,4 +1,3 @@
-// Observer.h
 
 #ifndef OBSERVER_H
 #define OBSERVER_H
@@ -12,4 +11,4 @@ public:
     virtual void update(Subject *subject) = 0;
 };
 
-#endif // OBSERVER_H
+#endif

@@ -1,4 +1,3 @@
-// Translation.h
 #pragma once
 
 #include "TransformationComponent.h"

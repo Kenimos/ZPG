@@ -9,8 +9,11 @@ public:
     Generator();
     ~Generator();
     float getRandomFloat(float min, float max);
+    float getRandomFloatExcluding(float min, float max, float min2, float max2);
+    
     int getRandomInt(int min, int max);
     glm::vec3 getRandomVec3(float min, float max, bool yZero = false);
+    
 private:
     std::mt19937 engine;
 };

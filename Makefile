@@ -1,9 +1,9 @@
 # Compiler and flags
 CXX = g++
-CXXFLAGS = -std=c++14 -Wall -IHeaders -I/opt/homebrew/include
+CXXFLAGS = -std=c++14 -Wall -IHeaders -I/opt/homebrew/include -I/opt/homebrew/opt/assimp/include
 
-# Linker flags (for OpenGL, GLEW, and GLFW)
-LDFLAGS = -L/opt/homebrew/lib -lGLEW -lglfw -framework OpenGL
+# Linker flags (for OpenGL, GLEW, GLFW, and Assimp)
+LDFLAGS = -L/opt/homebrew/lib -L/opt/homebrew/opt/assimp/lib -lGLEW -lglfw -lassimp -framework OpenGL
 
 # Folders
 SRC_DIR = Cpp
@@ -25,7 +25,6 @@ all: $(TARGET)
 
 # Create output binary in the root directory
 $(TARGET): $(OBJECTS)
-	@mkdir -p $(BUILD_DIR)
 	$(CXX) $(OBJECTS) -o $(TARGET) $(LDFLAGS)
 
 # Compile object files

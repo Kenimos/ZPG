@@ -9,15 +9,17 @@
 #include <iostream>
 #include "ShaderLoader.h"
 #include "Transformation.h"
-#include "Translation.h" 
-#include "Rotation.h"    
-#include "Scaling.h"     
+#include "Translation.h"
+#include "Rotation.h"
+#include "Scaling.h"
+#include <glm/gtc/random.hpp>
+#include <glm/ext/matrix_transform.hpp>
 
 Scene::Scene(Camera *camera)
     : camera(camera),
       treeModel(nullptr), bushModel(nullptr), sphereModel(nullptr), giftModel(nullptr), rectangleModel(nullptr),
       constantShader(nullptr), lambertShader(nullptr), phongShader(nullptr), blinnPhongShader(nullptr),
-      spotlightShader(nullptr), currentShaderIndex(0), flashLight(nullptr)
+      spotlightShader(nullptr), currentShaderIndex(0), flashLight(nullptr), skybox(nullptr), skyboxFollowsCamera(true)
 {
 }
 
@@ -82,6 +84,15 @@ void Scene::initShaders()
         camera->attach(shader);
     }
     camera->notifyObservers();
+
+    std::vector<std::string> faces{
+        "/Users/jan/Desktop/ZPG/Textures/posx.jpg",
+        "/Users/jan/Desktop/ZPG/Textures/negx.jpg",
+        "/Users/jan/Desktop/ZPG/Textures/posy.jpg",
+        "/Users/jan/Desktop/ZPG/Textures/negy.jpg",
+        "/Users/jan/Desktop/ZPG/Textures/posz.jpg",
+        "/Users/jan/Desktop/ZPG/Textures/negz.jpg"};
+    skybox = new SkyBox(faces);
 }
 
 void Scene::switchShaders()
@@ -128,7 +139,6 @@ void Scene::loadModelsScene1()
         sphereModel->loadFromData(sphereData);
     }
 
-    
     std::vector<float> treeData(tree, tree + sizeof(tree) / sizeof(float));
     treeModel = new Model();
     treeModel->loadFromData(treeData);
@@ -137,27 +147,26 @@ void Scene::loadModelsScene1()
     bushModel = new Model();
     bushModel->loadFromData(bushData);
 
-    
     float rectangleVertices[] = {
-        
-        -50.0f, 0.0f, -50.0f, 0.0f, 1.0f, 0.0f,
-        50.0f, 0.0f, -50.0f, 0.0f, 1.0f, 0.0f,
-        50.0f, 0.0f, 50.0f, 0.0f, 1.0f, 0.0f,
+        -150.0f, 0.0f, -150.0f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f,
+        150.0f, 0.0f, -150.0f, 0.0f, 1.0f, 0.0f, 10.0f, 0.0f,
+        150.0f, 0.0f, 150.0f, 0.0f, 1.0f, 0.0f, 10.0f, 10.0f,
 
-        50.0f, 0.0f, 50.0f, 0.0f, 1.0f, 0.0f,
-        -50.0f, 0.0f, 50.0f, 0.0f, 1.0f, 0.0f,
-        -50.0f, 0.0f, -50.0f, 0.0f, 1.0f, 0.0f};
+        150.0f, 0.0f, 150.0f, 0.0f, 1.0f, 0.0f, 10.0f, 10.0f,
+        -150.0f, 0.0f, 150.0f, 0.0f, 1.0f, 0.0f, 0.0f, 10.0f,
+        -150.0f, 0.0f, -150.0f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f};
 
     std::vector<float> rectangleData(
         rectangleVertices,
         rectangleVertices + sizeof(rectangleVertices) / sizeof(float));
 
     rectangleModel = new Model();
-    rectangleModel->loadFromData(rectangleData);
+    rectangleModel->loadFromData(rectangleData, true);
+    Texture *grassTexture = new Texture("textures/grass.png");
 
-    
     DrawableObject *groundPlane = new DrawableObject(rectangleModel, phongShader);
-    groundPlane->setColor(glm::vec3(0.5f, 0.5f, 0.5f)); 
+    groundPlane->setColor(glm::vec3(1.0f));
+    groundPlane->setTexture(grassTexture);
     drawableObjects.push_back(groundPlane);
 
     for (int i = 0; i < 50; ++i)
@@ -169,7 +178,6 @@ void Scene::loadModelsScene1()
         float rotationAngle = generator.getRandomFloat(0.0f, 360.0f);
         float scaleValue = generator.getRandomFloat(0.5f, 2.0f);
 
-        
         auto translation = std::make_shared<Translation>(glm::vec3(posX, 0.0f, posZ));
         auto rotation = std::make_shared<Rotation>(rotationAngle, glm::vec3(0.0f, 1.0f, 0.0f));
         auto scaling = std::make_shared<Scaling>(glm::vec3(scaleValue));
@@ -178,7 +186,6 @@ void Scene::loadModelsScene1()
         treeObject->getTransformation().addComponent(rotation);
         treeObject->getTransformation().addComponent(translation);
 
-        
         int randomChoice = generator.getRandomInt(0, 2);
         if (randomChoice == 0)
         {
@@ -194,7 +201,7 @@ void Scene::loadModelsScene1()
             treeObject->getTransformation().addComponent(dynamicTranslation);
         }
 
-        treeObject->setColor(glm::vec3(1.0f, 1.0f, 1.0f));
+        treeObject->setColor(glm::vec3(0.1f, 1.0f, 0.1f));
         drawableObjects.push_back(treeObject);
     }
 
@@ -207,7 +214,6 @@ void Scene::loadModelsScene1()
         float rotationAngle = generator.getRandomFloat(0.0f, 360.0f);
         float scaleValue = generator.getRandomFloat(0.5f, 2.0f);
 
-        
         auto translation = std::make_shared<Translation>(glm::vec3(posX, 0.0f, posZ));
         auto rotation = std::make_shared<Rotation>(rotationAngle, glm::vec3(0.0f, 1.0f, 0.0f));
         auto scaling = std::make_shared<Scaling>(glm::vec3(scaleValue));
@@ -216,7 +222,7 @@ void Scene::loadModelsScene1()
         bushObject->getTransformation().addComponent(rotation);
         bushObject->getTransformation().addComponent(translation);
 
-        bushObject->setColor(glm::vec3(1.0f, 1.0f, 1.0f));
+        bushObject->setColor(glm::vec3(0.3f, 1.0f, 1.1f));
         drawableObjects.push_back(bushObject);
     }
 
@@ -236,16 +242,14 @@ void Scene::loadModelsScene1()
         glm::vec3 randomPosition = generator.getRandomVec3(-4.0f, 4.0f, true);
         glm::vec3 randomVelocity = generator.getRandomVec3(1.0f, 10.0f, true);
 
-        Light *light = new Light(POINT_LIGHT, randomPosition, lightColors[i], 15.0f);
+        Light *light = new Light(POINT_LIGHT, randomPosition, lightColors[i], 1.0f);
         lights.push_back(light);
 
         DrawableObject *lightSphere = new DrawableObject(sphereModel, constantShader);
 
-        
         auto dynamicTranslation = std::make_shared<DynamicTranslation>(randomPosition, randomVelocity);
         lightSphere->getTransformation().addComponent(dynamicTranslation);
 
-        
         auto scaling = std::make_shared<Scaling>(glm::vec3(0.2f));
         lightSphere->getTransformation().addComponent(scaling);
 
@@ -254,13 +258,13 @@ void Scene::loadModelsScene1()
         drawableObjects.push_back(lightSphere);
         lightSphereIndices.push_back(drawableObjects.size() - 1);
     }
-    
-    Light *spotLight = new Light(SPOTLIGHT, glm::vec3(0.0f, 3.0f, 0.0f), glm::vec3(1.0f, 0.0f, 0.0f), 500.0f);
+
+    Light *spotLight = new Light(SPOTLIGHT, glm::vec3(0.0f, 3.0f, 0.0f), glm::vec3(1.0f, 0.0f, 0.0f), 10.0f);
     spotLight->setDirection(glm::vec3(-1.0f, 0.0f, 0.0f));
     spotLight->setCutOffs(10.5f, 17.5f);
     lights.push_back(spotLight);
 
-    Light *pointLight = new Light(POINT_LIGHT, glm::vec3(5.0f, 50.0f, 5.0f), glm::vec3(1.0f, 1.0f, 1.0f), 300.0f);
+    Light *pointLight = new Light(POINT_LIGHT, glm::vec3(5.0f, 50.0f, 5.0f), glm::vec3(1.0f, 1.0f, 1.0f), 10.0f);
     lights.push_back(pointLight);
 
     flashLight = new FlashLight(camera, glm::vec3(1.0f), 100.0f, 7.5f, 14.5f);
@@ -277,7 +281,7 @@ void Scene::loadModelsScene2()
     drawableObjects.clear();
     lights.clear();
     lightSphereIndices.clear();
-    
+
     if (!sphereModel)
     {
         std::vector<float> sphereData(sphere, sphere + sizeof(sphere) / sizeof(float));
@@ -327,7 +331,6 @@ void Scene::loadModelsScene2()
 
     drawableObjects.push_back(lambertSphere);
 
-    
     DrawableObject *constantSphere = new DrawableObject(sphereModel, phongShader);
     constantSphere->setColor(glm::vec3(0.9f, 0.9f, 1.0f));
 
@@ -342,7 +345,6 @@ void Scene::loadModelsScene2()
 
     drawableObjects.push_back(constantSphere);
 
-    
     Light *pointLight1 = new Light(POINT_LIGHT, glm::vec3(0.0f, 3.0f, 0.0f), glm::vec3(1.0f, 1.0f, 0.0f), 10.0f);
     lights.push_back(pointLight1);
 
@@ -350,7 +352,7 @@ void Scene::loadModelsScene2()
     lights.push_back(pointLight2);
 
     lightSphereIndices.push_back(drawableObjects.size() - 1);
-    
+
     flashLight = new FlashLight(camera, glm::vec3(1.0f), 1.0f, 12.5f, 17.5f);
     lights.push_back(flashLight);
 
@@ -362,112 +364,23 @@ void Scene::loadModelsScene2()
 
 void Scene::loadModelsScene3()
 {
-    drawableObjects.clear();
-    lights.clear();
-    lightSphereIndices.clear();
     
-    if (!sphereModel)
-    {
-        std::vector<float> sphereData(sphere, sphere + sizeof(sphere) / sizeof(float));
-        sphereModel = new Model();
-        sphereModel->loadFromData(sphereData);
-    }
-
-    
-    DrawableObject *centralSphere = new DrawableObject(sphereModel, phongShader);
-    centralSphere->setColor(glm::vec3(1.0f, 1.0f, 1.0f));
-
-    auto centralScaling = std::make_shared<Scaling>(glm::vec3(2.0f));
-    centralSphere->getTransformation().addComponent(centralScaling);
-
-    drawableObjects.push_back(centralSphere);
-
-    int numSpheres = 8;
-    float radius = 10.0f;
-
-    for (int i = 0; i < numSpheres; ++i)
-    {
-        DrawableObject *orbitingSphere = new DrawableObject(sphereModel, phongShader);
-        orbitingSphere->setColor(glm::vec3(generator.getRandomFloat(0.5f, 1.0f),
-                                           generator.getRandomFloat(0.5f, 1.0f),
-                                           generator.getRandomFloat(0.5f, 1.0f)));
-
-        float angle = (360.0f / numSpheres) * i;
-        auto rotation = std::make_shared<Rotation>(angle, glm::vec3(0.0f, 1.0f, 0.0f));
-        auto dynamicRotation = std::make_shared<DynamicRotation>(0.0f, glm::vec3(0.0f, 1.0f, 0.0f), 20.0f);
-
-        auto translation = std::make_shared<Translation>(glm::vec3(radius, 0.0f, 0.0f));
-
-        orbitingSphere->getTransformation().addComponent(dynamicRotation);
-        orbitingSphere->getTransformation().addComponent(rotation);
-        orbitingSphere->getTransformation().addComponent(translation);
-
-        drawableObjects.push_back(orbitingSphere);
-    }
-
-    
-    Light *centralLight = new Light(POINT_LIGHT, glm::vec3(0.0f), glm::vec3(1.0f), 50.0f);
-    lights.push_back(centralLight);
-
-    
-    flashLight = new FlashLight(camera, glm::vec3(1.0f), 70.0f, 4.5f, 8.5f);
-    lights.push_back(flashLight);
-
-    for (auto *shader : shaders)
-    {
-        shader->setLights(lights);
-    }
 }
 
 void Scene::loadModelsScene4()
 {
-    drawableObjects.clear();
-    lights.clear();
-    lightSphereIndices.clear();
-
-    if (!sphereModel)
-    {
-        std::vector<float> sphereData(sphere, sphere + sizeof(sphere) / sizeof(float));
-        sphereModel = new Model();
-        sphereModel->loadFromData(sphereData);
-    }
-
-    int gridSize = 5;
-    float spacing = 2.5f;
-
-    for (int x = -gridSize; x <= gridSize; ++x)
-    {
-        for (int z = -gridSize; z <= gridSize; ++z)
-        {
-            DrawableObject *sphereObject = new DrawableObject(sphereModel, phongShader);
-            sphereObject->setColor(glm::vec3(generator.getRandomFloat(0.5f, 1.0f),
-                                             generator.getRandomFloat(0.5f, 1.0f),
-                                             generator.getRandomFloat(0.5f, 1.0f)));
-
-            glm::vec3 position = glm::vec3(x * spacing, 0.0f, z * spacing);
-            auto translation = std::make_shared<Translation>(position);
-
-            
-            float scaleSpeed = generator.getRandomFloat(0.5f, 1.5f);
-            auto dynamicScaling = std::make_shared<DynamicScaling>(glm::vec3(1.0f), scaleSpeed);
-            sphereObject->getTransformation().addComponent(dynamicScaling);
-            sphereObject->getTransformation().addComponent(translation);
-
-            drawableObjects.push_back(sphereObject);
-        }
-    }
-
-    flashLight = new FlashLight(camera, glm::vec3(1.0f), 70.0f, 4.5f, 8.5f);
-    lights.push_back(flashLight);
-
-    for (auto *shader : shaders)
-    {
-        shader->setLights(lights);
-    }
+    
 }
 
 void Scene::draw()
 {
+    if (skybox && skyboxFollowsCamera)
+    {
+        glm::mat4 view = camera->getViewMatrix();
+        glm::mat4 projection = camera->getProjectionMatrix();
+        skybox->draw(view, projection, skyboxFollowsCamera);
+    }
+
     for (auto *shader : shaders)
     {
         shader->setLights(lights);
@@ -476,7 +389,15 @@ void Scene::draw()
     {
         object->draw();
     }
+
+    if (skybox && !skyboxFollowsCamera)
+    {
+        glm::mat4 view = camera->getViewMatrix();
+        glm::mat4 projection = camera->getProjectionMatrix();
+        skybox->draw(view, projection, skyboxFollowsCamera);
+    }
 }
+
 
 void Scene::update(float deltaTime)
 {
@@ -489,7 +410,7 @@ void Scene::update(float deltaTime)
     {
         size_t sphereIndex = lightSphereIndices[i];
         DrawableObject *lightSphere = drawableObjects[sphereIndex];
-        
+
         auto dynamicTranslation = lightSphere->getTransformation().getComponent<DynamicTranslation>();
 
         if (dynamicTranslation)
@@ -547,7 +468,6 @@ void Scene::update(float deltaTime)
                 dynamicTranslation->setVelocity(velocity);
             }
 
-            
             lights[i]->setPositionOrDirection(pos);
         }
     }
@@ -564,5 +484,31 @@ void Scene::toggleFlashLightIntensity()
     if (flashLight)
     {
         flashLight->toggleIntensity();
+    }
+}
+
+void Scene::toggleSkyboxFollowing()
+{
+    skyboxFollowsCamera = !skyboxFollowsCamera;
+
+    if (!skyboxFollowsCamera)
+    {
+        glm::vec3 cameraPos = camera->getPosition();
+        glm::vec3 cameraFront = camera->getFront();
+        glm::vec3 skyboxPosition = cameraPos + cameraFront * 50.0f;
+
+        glm::mat4 modelMatrix = glm::translate(glm::mat4(1.0f), skyboxPosition);
+        modelMatrix = glm::scale(modelMatrix, glm::vec3(50.0f));
+
+        skybox->setModelMatrix(modelMatrix);
+    }
+
+    if (skyboxFollowsCamera)
+    {
+        std::cout << "Skybox will now follow the camera." << std::endl;
+    }
+    else
+    {
+        std::cout << "Skybox is now stationary." << std::endl;
     }
 }
